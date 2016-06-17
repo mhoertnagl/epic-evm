@@ -26,8 +26,8 @@ func Ry(instr Instr) uint32 {
 	return Bits(instr, 16, 4)
 }
 
-func Imm16(instr Instr) uint32 {
-	return Bits(instr, 4, 16)
+func Imm16(instr Instr) int32 {
+	return int32(Bits(instr, 4, 16))
 }
 
 func AluOp(instr Instr) uint32 {

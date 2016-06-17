@@ -19,7 +19,7 @@ var ror = func(left uint32, right uint32) uint32 { return (left << (32 - right))
 var auluOps = [...]aluOpFun{add, sub, mul, div, and, oor, nor, xor, sll, srl, sra, ror}
 */
 
-func compute(aluOp uint32, left uint32, right uint32) uint32 {
+func compute(aluOp uint32, left int32, right int32) int32 {
 	switch aluOp {
 	case AluOpAdd:
 		return left + right
@@ -38,13 +38,13 @@ func compute(aluOp uint32, left uint32, right uint32) uint32 {
 	case AluOpXor:
 		return left ^ right
 	case AluOpSll:
-		return left << right
+		return left << uint32(right)
 	case AluOpSrl:
-		return left >> right
+		return int32(uint32(left) >> uint32(right))
 	case AluOpSra:
-		return uint32(int(left) >> right)
+		return left >> uint32(right)
 	case AluOpRor:
-		return (left << (32 - right)) | (left >> right)
+		return (left << uint32(32-right)) | (left >> uint32(right))
 	}
 	return 0
 }
