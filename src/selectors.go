@@ -10,6 +10,10 @@ func IsImm(instr Instr) bool {
 	return IsSet(instr, 28)
 }
 
+func IsLoad(instr Instr) bool {
+	return IsSet(instr, 3)
+}
+
 func IsLinkBranch(instr Instr) bool {
 	return IsSet(instr, 28)
 }

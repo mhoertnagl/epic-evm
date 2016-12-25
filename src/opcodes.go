@@ -16,13 +16,9 @@ const (
 	R09 = 0x9
 	R10 = 0xA
 	R11 = 0xB
-	R12 = 0xC
 	FP  = 0xC
-	R13 = 0xD
 	SP  = 0xD
-	R14 = 0xE
-	RT  = 0xE
-	R15 = 0xF
+	RP  = 0xE
 	IP  = 0xF
 )
 
@@ -52,13 +48,13 @@ func regName(reg uint32) string {
 		return "r10"
 	case R11:
 		return "r11"
-	case R12:
-		return "r12"
-	case R13:
+	case FP:
 		return "fp "
-	case R14:
+	case SP:
 		return "sp "
-	case R15:
+	case RP:
+		return "rp "
+	case IP:
 		return "ip "
 	}
 	return fmt.Sprintf("?%v", reg)
@@ -98,3 +94,33 @@ const (
 	AluOpSra = 0xA
 	AluOpRor = 0xB // Better Lift LFT
 )
+
+func aluOpName(aluOp uint32) string {
+	switch aluOp {
+	case AluOpAdd:
+		return "+"
+	case AluOpSub:
+		return "-"
+	case AluOpMul:
+		return "*"
+	case AluOpDiv:
+		return "/"
+	case AluOpAnd:
+		return "&"
+	case AluOpOor:
+		return "|"
+	case AluOpNor:
+		return "~|"
+	case AluOpXor:
+		return "^"
+	case AluOpSll:
+		return "<<"
+	case AluOpSrl:
+		return ">>"
+	case AluOpSra:
+		return ">>>"
+	case AluOpRor:
+		return "<>>"
+	}
+	return fmt.Sprintf("?%v", aluOp)
+}
