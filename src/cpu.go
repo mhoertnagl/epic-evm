@@ -2,6 +2,9 @@ package main
 
 import "fmt"
 
+/**
+ *
+ */
 type Cpu struct {
 	// Instruction Pointer (IP) indicates the position of the current Instruction
 	// word, which is 4 bytes long. Incrementing the IP by one is equal to
@@ -78,9 +81,9 @@ func (cpu Cpu) executeME(instr Instr) {
 		vy = cpu.Regs[ry]
 	}
 	if IsLoad(instr) {
-		cpu.Regs[rz] = cpu.Mem[vx + vy] // LDW rz rx[ry] oder LDW rz rx[8] <-- Kontext klärt ob immediate oder register.
+		cpu.Regs[rz] = cpu.Mem[vx+vy] // LDW rz rx[ry] oder LDW rz rx[8] <-- Kontext klärt ob immediate oder register.
 	} else {
-		cpu.Mem[vx + vy] = cpu.Regs[rz] // STW rz rx[ry] oder STW rz rx[8]
+		cpu.Mem[vx+vy] = cpu.Regs[rz] // STW rz rx[ry] oder STW rz rx[8]
 	}
 	// Print instruction.
 }
