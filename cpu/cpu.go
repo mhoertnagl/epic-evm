@@ -16,13 +16,13 @@ type Cpu struct {
 
 func (cpu Cpu) Execute(code []Instr) {
 	codeLength := len(code)
-	for uint32(cpu.Regs[IP]) < codeLength {
-		cpu.executeOne(code[uint32(cpu.Regs[IP])])
+	for uint32(cpu.Regs[IP]) < uint32(codeLength) {
+		cpu.step(code[uint32(cpu.Regs[IP])])
 	}
 	fmt.Printf("Execution completed.\n")
 }
 
-func (cpu Cpu) executeOne(instr Instr) {
+func (cpu Cpu) step(instr Instr) {
 	fmt.Printf("OP = %v\n", Op(instr))
 	switch Op(instr) {
 	case OpDP:
