@@ -1,4 +1,4 @@
-package main
+package util
 
 // Bits extracts a consecutive portion of length and offest from the LSB of an
 // unsigned integer.
