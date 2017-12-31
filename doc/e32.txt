@@ -20,6 +20,16 @@ R13 | SP
 R14 | RP
 R15 | IP (Instruction Pointer)
 
+================================================================================
+ SPECIAL CPU REGISTERS
+================================================================================
+
+In KERNEL MODE the following two operations allow to read and write special CPU
+registers.
+
+      ssr cir r0 
+      lsr r0 cir
+
 --------------------------------------------------------------------------------
  CPU INFO REGISTER - CIR
 --------------------------------------------------------------------------------
@@ -58,10 +68,28 @@ For EPIC-0 rev. 1.0 the register will be set to:
 
 Only code with KERNEL MODE privileges can access this register.
 
- Initialization
+
+Initialization
 --------------------------------------------------------------------------------
 
+The following listing shows the relevant portion of the CPU initialization 
+routine that sets the CPU INFO REGISTER with the appropriate version info:
 
+      let CPU_MODEL          = 0
+      let CPU_MAJOR_REVISION = 1
+      let CPU_MINOR_REVISION = 0
+
+      // xor r0  r0                    // Clear r0. 
+      clr r0                       // Clear r0. Pseudo instr.: xor r0  r0   
+      oor r0  CPU_MODEL            // Fill r0 with CPU version info.
+      sll r0  6
+      oor r0  CPU_MAJOR_REVISION
+      sll r0  6
+      oor r0  CPU_MINOR_REVISION
+      sll r0  16
+      ssr cir r0                   // Save CPU version info to CIR register.
+      
+The routine is stored in the CPU bootstrap ROM.
 
 
 --------------------------------------------------------------------------------
@@ -77,13 +105,33 @@ Only code with KERNEL MODE privileges can access this register.
                                                            | MODE      |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
- MODE  |
--------+----------------
- 0 0 0 | Kernel MODE
--------+----------------
- 0 0 1 | Exception MODE
--------+----------------
- 0 1 0 | User MODE
+      MODE  |
+     -------+----------------
+      0 0 0 | Kernel MODE
+     -------+----------------
+      0 0 1 | Exception MODE
+     -------+----------------
+      0 1 0 | User MODE
+
+
+
+      COND  |
+     -------+-----------------------------------------------------------
+      0 0 0 | 
+     -------+-----------------------------------------------------------
+      0 0 1 | 
+     -------+-----------------------------------------------------------
+      0 1 0 | 
+     -------+-----------------------------------------------------------
+      0 1 1 | 
+     -------+-----------------------------------------------------------
+      1 0 0 | 
+     -------+-----------------------------------------------------------
+      1 0 1 | 
+     -------+-----------------------------------------------------------
+      1 1 0 | 
+     -------+-----------------------------------------------------------
+      1 1 1 | 
 
 --------------------------------------------------------------------------------
  DATA PROCESSING OPERATIONS - ADD
