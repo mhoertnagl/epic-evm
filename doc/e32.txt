@@ -96,6 +96,12 @@ The routine is stored in the CPU bootstrap ROM.
  CPU STATE REGISTER - CSR
 --------------------------------------------------------------------------------
 
+The CPU STATE REGISTER contains the state of the CPU. 
+   The COND bits 28-26 reflect the last result of a testing function or an 
+operation with the SET flag enabled.
+   The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
+to various privileges or restrictions.
+
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
       |           | COND      | 
@@ -105,33 +111,89 @@ The routine is stored in the CPU bootstrap ROM.
                                                            | MODE      |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      MODE  |
-     -------+----------------
-      0 0 0 | Kernel MODE
-     -------+----------------
-      0 0 1 | Exception MODE
-     -------+----------------
-      0 1 0 | User MODE
+
+Mode Bits
+--------------------------------------------------------------------------------
+
+The MODE bits determine execution restrictions for certain instructions. A CPU
+in KERNEL MODE is able to execute any instruction and can change any registers.
+// Exception Mode ist wohl überflüssig.
+In User MODE, the only way to execute restricted instructions or access internal 
+CPU registers is a switch to Kernel MODE via a system call instruction (sys).
+
+       MODE  |
+      -------+----------------
+       0 0 0 | Kernel MODE
+      -------+----------------
+       0 0 1 | Exception MODE
+      -------+----------------
+       0 1 0 | User MODE
+
+
+Condition Bits
+--------------------------------------------------------------------------------
+
+      D <- signExt(REG[RA], 33) - signExt(REG[RB], 33)
+      
+      Z <- D == 0               // REG[RA] == REG[RB]
+      N <- D[32] == 1           // REG[RA] < REG[RB]
+      
+      E <- REG[RA] == REG[RB]
+      L <- REG[RA] < REG[RB]
+      G <- REG[RA] > REG[RB]    // ~L & ~E
+      
+      V <- 
+      
+       COND  | Mnemonic |
+      -------+----------+------------------------------------------------
+       0 0 0 | nv       | Never execute the instruction. 
+      -------+----------+------------------------------------------------
+       0 0 1 | eq       | Equal
+      -------+----------+------------------------------------------------
+       0 1 0 | lt       | Less Than
+      -------+----------+------------------------------------------------
+       0 1 1 | le       | Less Equal
+      -------+----------+------------------------------------------------
+       1 0 0 | gt       | Greater Than
+      -------+----------+------------------------------------------------
+       1 0 1 | ge       | Greater Equal
+      -------+----------+------------------------------------------------
+       1 1 0 | ne       | Not Equal
+      -------+----------+------------------------------------------------
+       1 1 1 | al       | Always execute the instruction. This is the 
+             |          | default behavior if the essembler instruction
+             |          | lacks an explicit mnemonic condition modifier.
+
+      C <- (| (CSR[28:26] & INSTR[28:26])) | (& INSTR[28:26])
+
+================================================================================
+ INSTRUCTION SET 
+================================================================================
+
+add
+sub
+mul
+?div
+
+and 
+oor 
+xor 
+nor
+
+sll 
+srl 
+sra 
+ror 
 
 
 
-      COND  |
-     -------+-----------------------------------------------------------
-      0 0 0 | 
-     -------+-----------------------------------------------------------
-      0 0 1 | 
-     -------+-----------------------------------------------------------
-      0 1 0 | 
-     -------+-----------------------------------------------------------
-      0 1 1 | 
-     -------+-----------------------------------------------------------
-      1 0 0 | 
-     -------+-----------------------------------------------------------
-      1 0 1 | 
-     -------+-----------------------------------------------------------
-      1 1 0 | 
-     -------+-----------------------------------------------------------
-      1 1 1 | 
+nop       <-> sllnv r0 r0 0   // Nothingness.
+mov rd ra <-> sll   rd ra 0   // rd <- ra
+clr rd    <-> xor   rd rd     // rd <- rd ^ rd (<-> rd = 0)
+inv rd    <-> nor   rd rd     // rd <- ~rd
+neg rd    <-> mul   rd -1     // rd <- -rd
+// neg rd    <-> inv   rd        // rd <- -rd
+//               add   rd 1
 
 --------------------------------------------------------------------------------
  DATA PROCESSING OPERATIONS - ADD
