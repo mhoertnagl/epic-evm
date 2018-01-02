@@ -137,6 +137,7 @@ Condition Bits
       
       Z <- D == 0               // REG[RA] == REG[RB]
       N <- D[32] == 1           // REG[RA] < REG[RB]
+      P <- ~N & ~Z              // REG[RA] > REG[RB]
       
       E <- REG[RA] == REG[RB]
       L <- REG[RA] < REG[RB]
@@ -146,7 +147,9 @@ Condition Bits
       
        COND  | Mnemonic |
       -------+----------+------------------------------------------------
-       0 0 0 | nv       | Never execute the instruction. 
+       0 0 0 | nv       | Never execute the instruction. However, set CSR 
+                        | condition flags if SET bit of the instruction 
+                        | is enabled.
       -------+----------+------------------------------------------------
        0 0 1 | eq       | Equal
       -------+----------+------------------------------------------------
@@ -170,31 +173,49 @@ Condition Bits
  INSTRUCTION SET 
 ================================================================================
 
-add
-sub
-mul
-?div
-
-and 
-oor 
-xor 
-nor
-
-sll 
-srl 
-sra 
-ror 
-
-
-
 nop       <-> sllnv r0 r0 0   // Nothingness.
 mov rd ra <-> sll   rd ra 0   // rd <- ra
 clr rd    <-> xor   rd rd     // rd <- rd ^ rd (<-> rd = 0)
 inv rd    <-> nor   rd rd     // rd <- ~rd
-neg rd    <-> mul   rd -1     // rd <- -rd
+neg rd ra <-> mul   rd ra -1     // rd <- -ra
+neg rd    <-> neg   rd rd
 // neg rd    <-> inv   rd        // rd <- -rd
 //               add   rd 1
+swp ra rb <-> xor   ra rb     // ra <- ra ^ rb
+              xor   rb ra     // rb <- rb ^ (ra ^ rb) <-> ra
+              xor   ra rb     // ra <- (ra ^ rb) ^ ra <-> rb
+              
+psh <register list>
+pop <register list>
 
+ret <-> mov ip rp
+
+// testing. Special case if cond = nv then setting the condition flags is not 
+// disabled 
+cmp ra rb  <-> ! subnv ra rb
+cmp ra num <-> ! subnv ra num
+
+// constant loading with ldc/lda.
+// Read and Write CPU registers.
+
+       ALU     | Mnemonic                ALU     | Mnemonic 
+      ---------+----------------------  ---------+----------------------
+       0 0 0 0 | add                     1 0 0 0 | -
+      ---------+----------------------  ---------+----------------------
+       0 0 0 1 | sub                     1 0 0 1 | -
+      ---------+----------------------  ---------+----------------------
+       0 0 1 0 | mul                     1 0 1 0 | -
+      ---------+----------------------  ---------+----------------------
+       0 0 1 1 | div                     1 0 1 1 | -
+      ---------+----------------------  ---------+----------------------
+       0 1 0 0 | and                     1 1 0 0 | sll
+      ---------+----------------------  ---------+----------------------
+       0 1 0 1 | oor                     1 1 0 1 | rol
+      ---------+----------------------  ---------+----------------------
+       0 1 1 0 | xor                     1 1 1 0 | srl
+      ---------+----------------------  ---------+----------------------
+       0 1 1 1 | nor                     1 1 1 1 | sra      
+          
 --------------------------------------------------------------------------------
  DATA PROCESSING OPERATIONS - ADD
 --------------------------------------------------------------------------------
@@ -218,6 +239,13 @@ neg rd    <-> mul   rd -1     // rd <- -rd
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
       | IMM12                                          | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+      
+
+      REG[RD] = REG[RA] + signExt(IMM12, 32)
+
+      [!] add[cond] rd ra rb
+      [!] add[cond] rd ra         <->  [!] add[cond] rd rd ra
+      [!] add[cond] rd ra sImm12
+      [!] add[cond] rd sImm12     <->  [!] add[cond] rd rd sImm12
 
 --------------------------------------------------------------------------------
  DATA PROCESSING OPERATIONS - REGISTER
@@ -255,7 +283,7 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 0 | 0 | 1 | COND      | S | 1 || RD            | IMM16
+      | 0 | 0 | 1 | COND      | S | 1/0? || RD            | IMM16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -279,6 +307,7 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 Note, that bits 11-1 are reserved for future enhancements and are expected to be
 all zeros to guarantee compatibility with upcoming ISA releases.
 
+// MOP (3 bit) 000 -> Memory, 001 -> CIR, 010 -> CSR, ...
 
 --------------------------------------------------------------------------------
  MEMORY - 12bit IMMEDIATE
@@ -296,7 +325,6 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 Note, that bits 3-1 are reserved for future enhancements and are expected to be
 all zeros to guarantee compatibility with upcoming ISA releases.
 
-
 --------------------------------------------------------------------------------
  CO-PROCESSOR
 --------------------------------------------------------------------------------
@@ -309,6 +337,26 @@ all zeros to guarantee compatibility with upcoming ISA releases.
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
                                                                        |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+
+      31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+     +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+     | 0 | 1 | 1 | COND      | 
+     +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+     +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                      | CPID          |
+     +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+
+     31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+    +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+    | 0 | 1 | 1 | COND      | 0   0 || RD            | RA            |
+    +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+     15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+    +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                    || OP            | 0   0   0   0 |
+    +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
 
 --------------------------------------------------------------------------------
