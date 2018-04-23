@@ -150,11 +150,11 @@ CPU registers is a switch to Kernel MODE via a system call instruction (sys).
 
        MODE  |
       -------+----------------
-       0 0 0 | Kernel MODE
+       0 0 1 | Kernel MODE
       -------+----------------
-       0 0 1 | Exception MODE
+       0 1 0 | Exception MODE
       -------+----------------
-       0 1 0 | User MODE
+       1 0 0 | User MODE
 
 
 Condition Bits
@@ -162,9 +162,9 @@ Condition Bits
 
       D <- signExt(REG[RA], 33) - signExt(REG[RB], 33)
       
-      Z <- D == 0               // REG[RA] == REG[RB]
-      N <- D[32] == 1           // REG[RA] < REG[RB]
-      P <- ~N & ~Z              // REG[RA] > REG[RB]
+      E <- D == 0               // REG[RA] == REG[RB]
+      L <- D[32] == 1           // REG[RA] < REG[RB]
+      G <- ~E & ~L              // REG[RA] > REG[RB]
       
       E <- REG[RA] == REG[RB]
       L <- REG[RA] < REG[RB]
@@ -175,8 +175,8 @@ Condition Bits
        COND  | Mnemonic |
       -------+----------+------------------------------------------------
        0 0 0 | nv       | Never execute the instruction. However, set CSR 
-                        | condition flags if SET bit of the instruction 
-                        | is enabled.
+             |          | condition flags if SET bit of the instruction 
+             |          | is enabled.
       -------+----------+------------------------------------------------
        0 0 1 | eq       | Equal
       -------+----------+------------------------------------------------
@@ -194,63 +194,27 @@ Condition Bits
              |          | default behavior if the essembler instruction
              |          | lacks an explicit mnemonic condition modifier.
 
-      C <- (| (CSR[28:26] & INSTR[28:26])) | (& INSTR[28:26])
+          | nv | eq | lt | le | gt | ge | ne | al |
+      ----+----+----+----+----+----+----+----+----+
+       eq |  0    1    0    1    0    1    0    1
+      ----+
+       lt |  0    0    1    1    0    0    1    1
+      ----+
+       gt |  0    0    0    0    1    1    1    1
+      ----+
+
+      C <- CSR[28] & INSTR[28] | CSR[27] & INSTR[27] | CSR[26] & INSTR[26]
 
 
 ================================================================================
  INSTRUCTION SET 
 ================================================================================
 
-      nop       <-> sllnv r0 r0 0   // Nothingness.
-      mov rd ra <-> sll   rd ra 0   // rd <- ra
-      clr rd    <-> xor   rd rd     // rd <- rd ^ rd (<-> rd = 0)
-      inv rd    <-> nor   rd rd     // rd <- ~rd
-      neg rd ra <-> mul   rd ra -1  // rd <- -ra
-      neg rd    <-> neg   rd rd
-      // neg rd    <-> inv   rd        // rd <- -rd
-      //               add   rd 1
-      swp ra rb <-> xor   ra rb     // ra <- ra ^ rb
-                    xor   rb ra     // rb <- rb ^ (ra ^ rb) <-> ra
-                    xor   ra rb     // ra <- (ra ^ rb) ^ ra <-> rb
-
-      ror rd ra uImm5 <-> rol rd ra (32 - uImm5)
-      ror rd uImm5    <-> ror rd rd uImm5          
-                    
-      psh <register list>
-      pop <register list>
-
-      // testing. Special case if cond = nv then setting the condition flags is not 
-      // disabled 
-      cmp ra rb  <-> ! subnv ra rb
-      cmp ra num <-> ! subnv ra num
-
-      // loading 32 bit constants.
-      ldc rd sImm32 <-> 
-        if sImm32 > 2^16-1 || sImm32 < 2^16 {
-          ldc rd sImm32[31:16] << 16
-        } else {
-          ldc rd sImm32[15:0]
-        }
-
-      // constant loading with lda.
-      lda rd @lbl <-> 
-
-      // Read and Write CPU registers.
-
-      // C programming language ohne signed/unsigned? (compare unsigned cpu)
-
-      // tst ra rb <-> ! andnv ra rb ?
-
-      // ret <-> mov ip rp ? 
-      // Eigentlich lädt man rp vom stack direkt in ip also 
-      // ret <-> ldw ip sp 
-      // Hat allerdings einen branch delay slot.
-
        ALU     | Mnemonic                ALU     | Mnemonic 
       ---------+----------------------  ---------+----------------------
-       0 0 0 0 | add                     1 0 0 0 | - (adu)
+       0 0 0 0 | add                     1 0 0 0 | -
       ---------+----------------------  ---------+----------------------
-       0 0 0 1 | sub                     1 0 0 1 | - (sbu)
+       0 0 0 1 | sub                     1 0 0 1 | cmp
       ---------+----------------------  ---------+----------------------
        0 0 1 0 | mul                     1 0 1 0 | -
       ---------+----------------------  ---------+----------------------
@@ -267,9 +231,9 @@ Condition Bits
 
        ALU     | Mnemonic                ALU     | Mnemonic 
       ---------+----------------------  ---------+----------------------
-       0 0 0 0 | add                     1 0 0 0 | - (adu)
+       0 0 0 0 | add                     1 0 0 0 | -
       ---------+----------------------  ---------+----------------------
-       0 0 0 1 | sub                     1 0 0 1 | - (sbu)
+       0 0 0 1 | sub                     1 0 0 1 | cmp
       ---------+----------------------  ---------+----------------------
        0 0 1 0 | mul                     1 0 1 0 | -
       ---------+----------------------  ---------+----------------------
@@ -314,7 +278,6 @@ Condition Bits
       REG[RD] = REG[RA] + signExt(IMM12, 32)
 
       [!] add[cond] rd ra sImm12
-      //[!] add[cond] rd sImm12     <->  [!] add[cond] rd rd sImm12
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -322,7 +285,7 @@ Condition Bits
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                      | 0   0   0   0 |
+                                                       | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       REG[RD] = REG[RD] + signExt(IMM16, 32)
@@ -335,7 +298,7 @@ Condition Bits
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                      | 0   0   0   0 |
+                                                       | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       REG[RD] = REG[RD] + (IMM16 << 16)

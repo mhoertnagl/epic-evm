@@ -1,7 +1,7 @@
 package main
 
 import (
-	"epic-evm/mem"
+	"epic-evm/evm/mem"
 )
 
 func main() {

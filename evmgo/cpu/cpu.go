@@ -76,7 +76,7 @@ func (cpu Cpu) executeME(instr Instr) {
 	vx := cpu.Regs[rx]
 	var vy int32
 	if IsImm(instr) {
-		vy = Imm16(instr) << 2
+		vy = Imm12(instr) // << 2
 	} else {
 		vy = cpu.Regs[ry]
 	}

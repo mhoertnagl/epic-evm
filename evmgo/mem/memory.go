@@ -1,7 +1,7 @@
 package mem
 
 import (
-	"epic-evm/mem/ex"
+	"epic-evm/evm/mem/ex"
 )
 
 // type IMemory interface {
