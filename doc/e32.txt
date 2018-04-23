@@ -4,31 +4,31 @@
 
        Bits    | Mn. | Alt. | Role
       ---------+-----+------+-------------------------------------------
-       0 0 0 0 | r0  |      | 
+       0 0 0 0 | r0  |      |
       ---------+-----+------+-------------------------------------------
-       0 0 0 1 | r1  |      | 
+       0 0 0 1 | r1  |      |
       ---------+-----+------+-------------------------------------------
-       0 0 1 0 | r2  |      | 
+       0 0 1 0 | r2  |      |
       ---------+-----+------+-------------------------------------------
-       0 0 1 1 | r3  |      | 
+       0 0 1 1 | r3  |      |
       ---------+-----+------+-------------------------------------------
-       0 1 0 0 | r4  |      | 
+       0 1 0 0 | r4  |      |
       ---------+-----+------+-------------------------------------------
-       0 1 0 1 | r5  |      | 
+       0 1 0 1 | r5  |      |
       ---------+-----+------+-------------------------------------------
-       0 1 1 0 | r6  |      | 
+       0 1 1 0 | r6  |      |
       ---------+-----+------+-------------------------------------------
-       0 1 1 1 | r7  |      | 
+       0 1 1 1 | r7  |      |
       ---------+-----+------+-------------------------------------------
-       1 0 0 0 | r8  |      | 
+       1 0 0 0 | r8  |      |
       ---------+-----+------+-------------------------------------------
-       1 0 0 1 | r9  |      | 
+       1 0 0 1 | r9  |      |
       ---------+-----+------+-------------------------------------------
-       1 0 1 0 | r10 |      | 
+       1 0 1 0 | r10 |      |
       ---------+-----+------+-------------------------------------------
-       1 0 1 1 | r11 |      | 
+       1 0 1 1 | r11 |      |
       ---------+-----+------+-------------------------------------------
-       1 1 0 0 | r12 |      |  
+       1 1 0 0 | r12 |      |
       ---------+-----+------+-------------------------------------------
        1 1 0 1 | r13 | sp   | stack pointer
       ---------+-----+------+-------------------------------------------
@@ -55,7 +55,7 @@
 In KERNEL MODE the following two operations allow to read and write special CPU
 registers.
 
-      sts cir r0 
+      sts cir r0
       lds r0 cir
 
 --------------------------------------------------------------------------------
@@ -73,13 +73,13 @@ The CPU INFO REGISTER (CIR) contains information about the version of the CPU.
                                                                        |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-The CPU MODEL field describes the overall architectural model. For the first 
-release named EPIC-0 rev. 1.0, this is going to be a three-stage pipelined CPU. 
-   CPU MAJOR REVISION and CPU MINOR REVISION contain the version of the CPU 
-revision. A change in major revision reflects a breaking change and may cause 
+The CPU MODEL field describes the overall architectural model. For the first
+release named EPIC-0 rev. 1.0, this is going to be a three-stage pipelined CPU.
+   CPU MAJOR REVISION and CPU MINOR REVISION contain the version of the CPU
+revision. A change in major revision reflects a breaking change and may cause
 some legacy application code to display unexpected behavior. A change in minor
 revision however indicates additions and improvements to the design without
-corrupting the backwards compatibility of the CPU. 
+corrupting the backwards compatibility of the CPU.
    Bug-fixes may or may not introduce breaking changes and will therefore either
 trigger major or minor revisions.
 
@@ -100,14 +100,14 @@ Only code with KERNEL MODE privileges can access this register.
 Initialization
 --------------------------------------------------------------------------------
 
-The following listing shows the relevant portion of the CPU initialization 
+The following listing shows the relevant portion of the CPU initialization
 routine that sets the CPU INFO REGISTER with the appropriate version info:
 
       let CPU_MODEL          = 0
       let CPU_MAJOR_REVISION = 1
       let CPU_MINOR_REVISION = 0
 
-      clr r0                       // Clear r0. Pseudo instr.: xor r0  r0   
+      clr r0                       // Clear r0. Pseudo instr.: xor r0  r0
       oor r0  CPU_MODEL            // Fill r0 with CPU version info.
       sll r0  6
       oor r0  CPU_MAJOR_REVISION
@@ -115,7 +115,7 @@ routine that sets the CPU INFO REGISTER with the appropriate version info:
       oor r0  CPU_MINOR_REVISION
       sll r0  16
       sts cir r0                   // Save CPU version info to CIR register.
-      
+
 The routine is stored in the CPU bootstrap ROM.
 
 
@@ -123,15 +123,15 @@ The routine is stored in the CPU bootstrap ROM.
  CPU STATE REGISTER - CSR
 --------------------------------------------------------------------------------
 
-The CPU STATE REGISTER contains the state of the CPU. 
-   The COND bits 28-26 reflect the last result of a testing function or an 
+The CPU STATE REGISTER contains the state of the CPU.
+   The COND bits 28-26 reflect the last result of a testing function or an
 operation with the SET flag enabled.
    The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
 to various privileges or restrictions.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      |           | COND      | 
+      |           | COND      |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -145,7 +145,7 @@ Mode Bits
 The MODE bits determine execution restrictions for certain instructions. A CPU
 in KERNEL MODE is able to execute any instruction and can change any registers.
 // Exception Mode ist wohl überflüssig.
-In User MODE, the only way to execute restricted instructions or access internal 
+In User MODE, the only way to execute restricted instructions or access internal
 CPU registers is a switch to Kernel MODE via a system call instruction (sys).
 
        MODE  |
@@ -169,9 +169,9 @@ Condition Bits
       E <- REG[RA] == REG[RB]
       L <- REG[RA] < REG[RB]
       G <- REG[RA] > REG[RB]    // ~L & ~E
-      
-      V <- 
-      
+
+      V <-
+
        COND  | Mnemonic |
       -------+----------+------------------------------------------------
        0 0 0 | nv       | Never execute the instruction. However, set CSR 
@@ -190,7 +190,7 @@ Condition Bits
       -------+----------+------------------------------------------------
        1 1 0 | ne       | Not Equal
       -------+----------+------------------------------------------------
-       1 1 1 | al       | Always execute the instruction. This is the 
+       1 1 1 | al       | Always execute the instruction. This is the
              |          | default behavior if the essembler instruction
              |          | lacks an explicit mnemonic condition modifier.
 
@@ -203,51 +203,41 @@ Condition Bits
        gt |  0    0    0    0    1    1    1    1
       ----+
 
-      C <- CSR[28] & INSTR[28] | CSR[27] & INSTR[27] | CSR[26] & INSTR[26]
+      C <- CSR[28] & INSTR[28] 
+         | CSR[27] & INSTR[27] 
+         | CSR[26] & INSTR[26]
+         | INSTR[28] & INSTR[27] & INSTR[26]   
 
 
 ================================================================================
- INSTRUCTION SET 
+ INSTRUCTION SET
 ================================================================================
 
-       ALU     | Mnemonic                ALU     | Mnemonic 
+       ALU     | Mnemonic                ALU     | Mnemonic
       ---------+----------------------  ---------+----------------------
-       0 0 0 0 | add                     1 0 0 0 | -
+       0 0 0 0 | add                     1 0 0 0 | adu
       ---------+----------------------  ---------+----------------------
-       0 0 0 1 | sub                     1 0 0 1 | cmp
+       0 0 0 1 | sub                     1 0 0 1 | sbu
       ---------+----------------------  ---------+----------------------
-       0 0 1 0 | mul                     1 0 1 0 | -
+       0 0 1 0 | mul                     1 0 1 0 | mlu
       ---------+----------------------  ---------+----------------------
-       0 0 1 1 | div                     1 0 1 1 | -
+       0 0 1 1 | div                     1 0 1 1 | dvu
       ---------+----------------------  ---------+----------------------
-       0 1 0 0 | and                     1 1 0 0 | sll
+       0 1 0 0 | and                     1 1 0 0 | cmp
       ---------+----------------------  ---------+----------------------
-       0 1 0 1 | oor                     1 1 0 1 | rol
+       0 1 0 1 | oor                     1 1 0 1 | cpu
       ---------+----------------------  ---------+----------------------
-       0 1 1 0 | xor                     1 1 1 0 | srl
+       0 1 1 0 | xor                     1 1 1 0 | tst
       ---------+----------------------  ---------+----------------------
-       0 1 1 1 | nor                     1 1 1 1 | sra      
+       0 1 1 1 | nor                     1 1 1 1 | mov/ldc (LoaD Constant)
 
 
-       ALU     | Mnemonic                ALU     | Mnemonic 
-      ---------+----------------------  ---------+----------------------
-       0 0 0 0 | add                     1 0 0 0 | -
-      ---------+----------------------  ---------+----------------------
-       0 0 0 1 | sub                     1 0 0 1 | cmp
-      ---------+----------------------  ---------+----------------------
-       0 0 1 0 | mul                     1 0 1 0 | -
-      ---------+----------------------  ---------+----------------------
-       0 0 1 1 | div                     1 0 1 1 | -
-      ---------+----------------------  ---------+----------------------
-       0 1 0 0 | and                     1 1 0 0 | ldc (LoaD Constant)
-      ---------+----------------------  ---------+----------------------
-       0 1 0 1 | oor                     1 1 0 1 | -
-      ---------+----------------------  ---------+----------------------
-       0 1 1 0 | xor                     1 1 1 0 | -
-      ---------+----------------------  ---------+----------------------
-       0 1 1 1 | nor                     1 1 1 1 | -    
-       
-          
+       SOP | Mnemonic                    SOP | Mnemonic
+      -----+--------------------------  -----+--------------------------
+       0 0 | sll (<<)                    1 0 | srl (>>)
+      -----+--------------------------  -----+--------------------------
+       0 1 | rol (<<>)                   1 1 | sra (>>>)
+
 --------------------------------------------------------------------------------
  DATA PROCESSING - ADD
 --------------------------------------------------------------------------------
@@ -258,22 +248,22 @@ Condition Bits
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | RB            | 0   0   0   0    0   0   0   0 | 0   0   0   0 |
+      | RB            | 0 | SOP   | SHAMT              | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-  
-      REG[RD] = REG[RA] + REG[RB]
 
-      [!] add[cond] rd ra rb
-      [!] add[cond] rd ra         <->  [!] add[cond] rd rd ra
-      
+      REG[RD] = REG[RA] + (REG[RB] sop shamt)
+
+      [!] add[cond] rd ra rb [sop shamt]
+      //[!] add[cond] rd ra         <->  [!] add[cond] rd rd ra
+
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
       | 0 | 0 | 0 | COND      | S | 1 || RD            | RA            |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+      
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
       | IMM12                                          | 0   0   0   0 |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+      
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       REG[RD] = REG[RA] + signExt(IMM12, 32)
 
@@ -290,8 +280,8 @@ Condition Bits
 
       REG[RD] = REG[RD] + signExt(IMM16, 32)
 
-      [!] add[cond] rd sImm16  
-     
+      [!] add[cond] rd sImm16
+
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
       | 0 | 0 | 1 | COND      | S | 1 || RD            | IMM16
@@ -302,7 +292,7 @@ Condition Bits
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       REG[RD] = REG[RD] + (IMM16 << 16)
-       
+
       [!] add[cond] rd sImm16 << 16
 
 
@@ -347,12 +337,12 @@ all zeros to guarantee compatibility with upcoming ISA releases.
  CO-PROCESSOR
 --------------------------------------------------------------------------------
 
-       CPID    | Co-Processor 
+       CPID    | Co-Processor
       ---------+--------------------------------------------------------
        0 0 0 0 | Special CPU registers.
       ---------+--------------------------------------------------------
        others  | Co-Processor slot X
-       
+
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -366,7 +356,7 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 0 | 1 | 1 | COND      | 
+      | 0 | 1 | 1 | COND      |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -396,10 +386,10 @@ all zeros to guarantee compatibility with upcoming ISA releases.
       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
         0   0   0   0   0   0   0   0    0   0   0   1 | 0   0   0   0 |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+      
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       [!] lds[cond] rd rs
-     
+
 --------------------------------------------------------------------------------
  SYSCALL
 --------------------------------------------------------------------------------
@@ -420,7 +410,7 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 1 | 0 | 1 | COND      | 
+      | 1 | 0 | 1 | COND      |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -434,13 +424,13 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 1 | 1 | 0 | COND      | 
+      | 1 | 1 | 0 | COND      |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
                                                                        |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-            
+
 
 --------------------------------------------------------------------------------
  BRANCH
