@@ -1,7 +1,11 @@
 class Cpu extends Device {
 
     constructor() {
-        this.regs = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        // Initialize the registers r0 - r14. On reset the contents of these
+        // registers is undefined and can take on any values.
+        // The register r15 is the IP and will start execution at address 0.
+        /** 32bit general purpose registers and the IP. */
+        this.regs = Array(16).fill(0)
     }
 
     step() {
@@ -38,13 +42,13 @@ class Cpu extends Device {
         }
     }
 
-    read(addr) {
-        throw new Error("Not implemented!")
-    }
+    // read(addr) {
+    //     throw new Error("Not implemented!")
+    // }
 
-    write(addr, val) {
-        throw new Error("Not implemented!")
-    }
+    // write(addr, val) {
+    //     throw new Error("Not implemented!")
+    // }
 
     extract(ins, start, len) {
         return (ins >> start) & ((1 << len) - 1)
