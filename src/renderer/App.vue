@@ -30,14 +30,7 @@
       </v-content>
 
       <v-navigation-drawer app fixed clipped right v-model="rightDrawer">
-        <v-list>
-          <v-list-tile>
-            <v-list-tile-action>
-              <v-icon>memory</v-icon>
-            </v-list-tile-action>
-            <v-list-tile-title>Memory</v-list-tile-title>
-          </v-list-tile>
-        </v-list>
+        <registers></registers>
       </v-navigation-drawer>
 
       <v-footer fixed app>
@@ -47,10 +40,17 @@
 </template>
 
 <script>
+  import registers from './components/display-view/registers'
+
   export default {
     name: 'epic-evm',
+
+    components: {
+      registers
+    },
+
     data: () => ({
-      rightDrawer: false,
+      rightDrawer: true,
       items: [
         { icon: 'tv', title: 'Display', to: '/' },
         { icon: 'bug_report', title: 'Debug', to: '/inspire' },

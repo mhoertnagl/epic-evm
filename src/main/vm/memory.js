@@ -7,13 +7,14 @@
 class Memory extends Device {
 
     /**
-     * Creates an new block of memory of length {len} words (4 bytes). Each
+     * Creates an new block of memory of length {size} words (4 bytes). Each
      * memory cell will be initialized as 0.
      * 
-     * @param {Number} len - The length of the memory in words (4 bytes).
+     * @param {Number} size - The length of the memory in words (4 bytes).
      */
-    constructor(len) {
-        this.mem = Array(len).fill(0) // Buffer
+    constructor(size) {
+        this.size = size
+        this.mem = Buffer.alloc(size << 2, 0)
     }
 
     /**
@@ -23,7 +24,13 @@ class Memory extends Device {
      * @return {Number} The value at address {addr}.
      */
     read(addr) {
-        throw new Error("Not implemented!")
+        if (addr < 0) {
+            throw new Error(`Cannot address memory below 0.`)
+        }
+        if (addr > size - 1) {
+            throw new Error(`Cannot address memory above [${this.size}].`)
+        }
+        return this.mem.readUInt32BE(addr)
     }
 
     /**
@@ -33,6 +40,12 @@ class Memory extends Device {
      * @param {Number} val  - The value to write.
      */
     write(addr, val) {
-        throw new Error("Not implemented!")
+        if (addr < 0) {
+            throw new Error(`Cannot address memory below 0.`)
+        }
+        if (addr > size - 1) {
+            throw new Error(`Cannot address memory above [${this.size}].`)
+        }
+        this.mem.writeInt32BE(val, addr)
     }
 }
