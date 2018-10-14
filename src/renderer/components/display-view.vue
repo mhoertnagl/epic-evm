@@ -1,15 +1,9 @@
 <template>
   <v-layout row wrap justify-center>
-    <!-- <div v-for="(row, r) in display" :key="r" class="display__row">
-      <div v-for="(cell, c) in row" :key="r * cols + c">
-        X
-      </div>
-      h
-    </div> -->
     <div class="display-view__container">
       <table class="display">
-        <tr v-for="(row, r) in display" :key="r" class="display__row">
-          <td v-for="(cell, c) in row" :key="r * cols + c" class="display__cell">
+        <tr v-for="(row, r) in displayMemory" :key="r" class="display__row">
+          <td v-for="(cell, c) in row" :key="r * 80 + c" class="display__cell">
             {{ cell }}
           </td>
         </tr>
@@ -19,33 +13,22 @@
 </template>
 
 <script>
+  // import Vue from 'vue'
+  import VM from '../../main/vm/vm'
+
+  // export default class DisplayView extends Vue {
+  //   get displayMemory () {
+  //     return VM.displayMemory
+  //   }
+  // }
+
   export default {
     name: 'display-view',
 
-    data: function () {
-      return {
-        display: [],
-        rows: 30, // 25,
-        cols: 80
+    computed: {
+      displayMemory: function () {
+        return VM.displayMemory
       }
-    },
-
-    methods: {
-
-      initDisplay: function () {
-        this.display = []
-        for (let r = 0; r < this.rows; r++) {
-          let row = []
-          for (let c = 0; c < this.cols; c++) {
-            row.push(String.fromCharCode(64))
-          }
-          this.display.push(row)
-        }
-      }
-    },
-
-    mounted: function () {
-      this.initDisplay()
     }
   }
 </script>
@@ -56,10 +39,13 @@
     border 2px solid #282828
 
   .display
+    padding 2px
     background-color #282828
     font-family monospace
     font-size 16px
 
   .display__cell
     line-height 16px
+    height 16px
+    width 10px
 </style>
