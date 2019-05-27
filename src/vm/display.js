@@ -21,7 +21,7 @@ export default class Display extends Device {
     for (let r = 0; r < this.rows; r++) {
       let row = []
       for (let c = 0; c < this.cols; c++) {
-        row.push(66)
+        row.push(0)
       }
       this.mem.push(row)
     }

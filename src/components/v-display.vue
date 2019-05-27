@@ -1,7 +1,7 @@
 <template>
-  <div class="monitor">
-    <div v-for="r in display.rows" :key="'r' + r" class="monitor-row">
-      <div v-for="c in display.cols" :key="'r' + r + 'c' + c" class="monitor-col">
+  <div class="v-display">
+    <div v-for="r in display.rows" :key="'r' + r" class="v-display-row">
+      <div v-for="c in display.cols" :key="'r' + r + 'c' + c" class="v-display-col">
         {{ read(r-1, c-1) }}
       </div>
     </div>
@@ -12,7 +12,7 @@
 import Display from '../vm/display.js'
 
 export default {
-  name: 'Monitor',
+  name: 'Display',
 
   data () {
     return {
@@ -35,7 +35,7 @@ export default {
 </script>
 
 <style scoped>
-.monitor {
+.v-display {
   font-style: "Courier New", Courier, monospace;
   font-size: 12px;
   color: #eee;
@@ -43,11 +43,11 @@ export default {
   padding: 10px;
 }
 
-.monitor-row {
+.v-display-row {
   height: 12px;
 }
 
-.monitor-col {
+.v-display-col {
   display: inline-block;
   width: 9px;
 }

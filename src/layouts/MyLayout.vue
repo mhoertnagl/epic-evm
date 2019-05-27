@@ -1,37 +1,28 @@
 <template>
   <q-layout view="hHh lpR fFf">
     <q-header>
-        <!-- <q-bar>
-          <div>EPIC VIrtual Machine</div>
-
-          <q-space />
-
-          <q-btn dense flat icon="minimize" @click="minimize" />
-          <q-btn dense flat icon="crop_square" @click="maximize" />
-          <q-btn dense flat icon="close" @click="closeApp" />
-        </q-bar> -->
-
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="left = !left" />
-
         <q-toolbar-title>
-          EPIC VIrtual Machine
+          EPIC Virtual Machine
         </q-toolbar-title>
 
-        <!-- <q-btn dense flat round icon="menu" @click="right = !right" /> -->
+        <q-btn dense flat round icon="play_arrow" />
+        <q-btn dense flat round icon="pause" />
+        <q-btn dense flat round icon="stop" />
       </q-toolbar>
     </q-header>
 
-<!--
-  @mouseover="miniState = false"
-  @mouseout="miniState = true"
--->
-    <q-drawer
-      v-model="left"
-      :mini="miniState"
-      bordered>
+    <q-drawer v-model="left" mini bordered>
       <q-list>
-        <q-item clickable tag="a" target="_blank" href="http://v1.quasar-framework.org">
+        <q-item>
+          <q-item-section avatar>
+            <q-icon name="desktop_windows" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Virtual Machine</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item>
           <q-item-section avatar>
             <q-icon name="folder" />
           </q-item-section>
@@ -39,12 +30,16 @@
             <q-item-label>Files</q-item-label>
           </q-item-section>
         </q-item>
+        <q-item>
+          <q-item-section avatar>
+            <q-icon name="bug_report" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Debug</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
-
-    <!-- <q-drawer v-model="right" side="right" bordered>
-      Right
-    </q-drawer> -->
 
     <q-page-container>
       <q-splitter v-model="splitter">
@@ -54,29 +49,7 @@
         </template>
 
         <template v-slot:after>
-          <q-tabs
-            v-model="tab"
-            dense
-            class="text-grey"
-            active-color="primary"
-            indicator-color="primary"
-            align="justify"
-            narrow-indicator
-          >
-            <q-tab name="registers" icon="alarm" label="Registers" />
-            <q-tab name="others" icon="movie" label="Others" />
-          </q-tabs>
-
-          <q-separator />
-
-          <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="registers">
-              Registers
-            </q-tab-panel>
-            <q-tab-panel name="others">
-              Others
-            </q-tab-panel>
-          </q-tab-panels>
+          <v-registers></v-registers>
         </template>
       </q-splitter>
     </q-page-container>
@@ -92,11 +65,8 @@ export default {
   name: 'MyLayout',
   data () {
     return {
-      left: this.$q.platform.is.desktop,
-      miniState: true,
-      // right: true
+      left: true,
       splitter: 75,
-      tab: 'registers'
     }
   },
 

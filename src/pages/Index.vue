@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center">
-    <monitor></monitor>
+    <v-display></v-display>
   </q-page>
 </template>
 

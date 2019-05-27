@@ -1,7 +1,6 @@
 import Device from './device'
 
 export default class Cpu extends Device {
-
   /**
    * Initializes the CPU.
    */
@@ -17,6 +16,14 @@ export default class Cpu extends Device {
 
     /** CPU state register. */
     this.csr = 0x1D000001
+  }
+
+  get gp_regs () {
+    return this.regs
+  }
+
+  get cs_reg () {
+    return this.csr
   }
 
   ip () {
@@ -147,7 +154,7 @@ export default class Cpu extends Device {
   }
 
   shift (val, sop, smt) {
-    switch(sop) {
+    switch (sop) {
       case 0:
         return val << smt
       case 1:
