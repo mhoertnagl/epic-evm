@@ -1,4 +1,5 @@
 import Device from './device'
+import { BusLocation } from './location'
 
 /**
  * The Bus connects the various parts of the virtual machine.
@@ -48,7 +49,8 @@ export default class Bus {
       const loc = con.loc
       const dev = con.dev
       if (loc.matches(addr)) {
-        return dev.write(loc.map(addr), val)
+        dev.write(loc.map(addr), val)
+        return
       }
     }
     throw new Error(`Cannot write value [${val}] to address [${addr}].`)
@@ -56,75 +58,12 @@ export default class Bus {
 }
 
 /**
- * A Connection links a device with a address range.
+ * A Connection links a device with an address range.
  */
 class Connection {
 
   constructor (loc, dev) {
     this.loc = loc
     this.dev = dev
-  }
-
-  get loc () {
-    return this.loc
-  }
-
-  get dev () {
-    return this.dev
-  }
-}
-
-/**
- * A BusLocation defines input and output ports of a device.
- */
-class BusLocation {
-
-  /**
-   * Returns true iff the address {addr} matches any of the location's
-   * accepted addresses.
-   *
-   * @param {Number} addr - The address.
-   * @return {Boolean} True iff the address matches.
-   */
-  matches (addr) {
-    throw new Error("Not implemented!")
-  }
-
-  /**
-   * Maps the bus address {addr} to the correct local device address.
-   *
-   * @param {Number} addr - The address.
-   */
-  map (addr) {
-    throw new Error("Not implemented!")
-  }
-}
-
-/**
- * A RangeBusLocation assignes a contiguous range of addresses to a device.
- *
- * @see BusLocation
- */
-class RangeBusLocation extends BusLocation {
-  /**
-   * Constructs a new RangeBusLocation that assignes a contiguous range of
-   * addresses to a device. The valid addresses start from {min} until {max}
-   * inclusive.
-   * The mapped device address will start at address 0.
-   *
-   * @param {Number} min - The minimum address.
-   * @param {Number} max - The maximum address inclusive.
-   */
-  constructor (min, max) {
-    this.min = min
-    this.max = max
-  }
-
-  matches (addr) {
-    return this.min <= addr && addr <= this.max
-  }
-
-  map (addr) {
-    return addr - this.min
   }
 }

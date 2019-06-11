@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import Epic from '../vm/epic'
 
 // import example from './module-example'
 
@@ -12,9 +13,12 @@ Vue.use(Vuex)
 
 export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
-    modules: {
-      // example
+    state: {
+      vm: new Epic()
     },
+    // modules: {
+    //   // example
+    // },
 
     // enable strict mode (adds overhead!)
     // for dev mode only

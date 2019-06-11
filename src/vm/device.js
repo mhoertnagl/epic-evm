@@ -4,6 +4,7 @@
  * @see Bus
  */
 export default class Device {
+  
   constructor () {
     this.bus = null
   }

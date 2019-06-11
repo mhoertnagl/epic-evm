@@ -13,6 +13,7 @@ export default class Memory extends Device {
    * @param {Number} size - The length of the memory in words (4 bytes).
    */
   constructor (size) {
+    super()
     this.size = size
     this.mem = Buffer.alloc(size << 2, 0)
   }
