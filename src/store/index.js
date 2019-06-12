@@ -1,29 +1,18 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import Epic from '../vm/epic'
-
-// import example from './module-example'
+import Epic from '@/modules/vm/engine/epic'
 
 Vue.use(Vuex)
 
-/*
- * If not building with SSR mode, you can
- * directly export the Store instantiation
- */
+export default new Vuex.Store({
+  state: {
+    vm: new Epic()
+  },
+  // modules: {
+  //   // example
+  // },
 
-export default function (/* { ssrContext } */) {
-  const Store = new Vuex.Store({
-    state: {
-      vm: new Epic()
-    },
-    // modules: {
-    //   // example
-    // },
-
-    // enable strict mode (adds overhead!)
-    // for dev mode only
-    strict: process.env.DEV
-  })
-
-  return Store
-}
+  // enable strict mode (adds overhead!)
+  // for dev mode only
+  strict: process.env.DEV
+})
