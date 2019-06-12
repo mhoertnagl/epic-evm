@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import Cpu from '../engine/cpu.js'
+import Cpu from '../engine/cpu'
 
 export default {
   name: 'Registers',

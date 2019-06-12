@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import Display from '../engine/display.js'
+import Display from '../engine/display'
 
 export default {
   name: 'Display',

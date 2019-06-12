@@ -26,23 +26,25 @@ export default class Cpu extends Device {
     return this.csr
   }
 
-  ip () {
+  get ip () {
     return this.regs[15]
   }
 
   step () {
-    let ins = this.bus.read(this.ip())
+    let ins = this.bus.read(this.ip)
     //let op = ins >> 28
     let op = this.extract(ins, 3, 28)
     switch (op) {
       case 0:
         // DAT-REG
+        this.dataInstr(ins)
         break
       case 1:
         // DAT-I16
         break
       case 2:
         // MEM
+        this.memInstr(ins)
         break
       case 3:
         // COP
@@ -56,6 +58,7 @@ export default class Cpu extends Device {
         throw new Error(`Reserved OP code [${op}].`)
       case 7:
         // BRA
+        this.braInstr(ins)
         break
       default:
         throw new Error(`Unsupported OP code [${op}].`)
@@ -70,6 +73,7 @@ export default class Cpu extends Device {
     let rd = this.extract(ins, 4, 20)
     let ra = this.extract(ins, 4, 16)
     let rb = this.extract(ins, 4, 12)
+    let i12 = this.extract(ins, 12, 4)
     let sop = this.extract(ins, 2, 9)
     let smt = this.extract(ins, 5, 4)
     let aop = this.extract(ins, 4, 0)
@@ -77,12 +81,12 @@ export default class Cpu extends Device {
     let vd = 0
     let va = this.regs[ra]
     // TODO: Hier muss immediate wert gelesen werden.
-    let ub = imm ? this.extract(ins, 12, 4) : this.regs[rb]
+    let tb = this.regs[rb]
+    let ub = imm === 1 ? i12 : tb
+    // TODO: Unsigned / Signed.
     let vb = this.shift(ub, sop, smt)
 
-    // Unsigned / Signed.
-
-    // TODO: Test conditions.
+    // TODO: Test condition flags.
     // if () {
 
     // }
@@ -151,6 +155,64 @@ export default class Cpu extends Device {
     if (wb) {
       this.regs[rd] = vd
     }
+  }
+
+  memInstr (ins) {
+    let cnd = this.extract(ins, 3, 26)
+    let set = this.extract(ins, 1, 25)
+    let imm = this.extract(ins, 1, 24)
+    let rd = this.extract(ins, 4, 20)
+    let ra = this.extract(ins, 4, 16)
+    let rb = this.extract(ins, 4, 12)
+    let i12 = this.extract(ins, 12, 4)
+    let sop = this.extract(ins, 2, 9)
+    let smt = this.extract(ins, 5, 4)
+    let ld = this.extract(ins, 1, 0)
+    
+    let vd = 0
+    let va = this.regs[ra]
+    // TODO: Hier muss immediate wert gelesen werden.
+    let tb = this.regs[rb]
+    let ub = imm === 1 ? i12 : tb
+    // TODO: Unsigned / Signed.
+    let vb = this.shift(ub, sop, smt)
+
+    // TODO: Test condition flags.
+    // if () {
+
+    // }
+    
+    let addr = va + vb
+    
+    if (ld === 1) {
+      vd = this.bus.read(addr)
+    } else {
+      vd = this.regs[rd]
+    }
+    
+    if (set) {
+      this.setCond(vd)
+    }
+    
+    if (ld === 1) {
+      this.regs[rd] = vd
+    } else {
+      this.bus.write(addr, vd)
+    }
+  }
+
+  braInstr (ins) {
+    let cnd = this.extract(ins, 3, 26)
+    let lnk = this.extract(ins, 1, 25)
+    let off = this.extract(ins, 25, 0)
+    
+    // TODO: check condition flags.
+    
+    if (lnk === 1) {
+      this.regs[14] = this.ip()
+    }
+    
+    this.regs[15] += off    
   }
 
   shift (val, sop, smt) {
