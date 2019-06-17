@@ -5,14 +5,15 @@
 </template>
 
 <script>
-import openAssemblyFile from '@/modules/files/services/file-dialog'
+var ipc = require('electron').ipcRenderer; 
+// import openAssemblyFile from '@/modules/files/services/file-dialog'
 
 export default {
   name: 'App',
 
-  created () {
-    openAssemblyFile(filePath => {
-      console.log(filePath)
+  created() {
+    ipc.on('load-binary', function(event, filePath) {
+      console.log(filePath);
     })
   }
 }
