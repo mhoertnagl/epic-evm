@@ -2,7 +2,7 @@ const { dialog } = require('electron')
 
 const options = {
   properties: ['openFile'],
-  filters: [{ name: 'Epic Assembly', extensions: ['bin', 'lst'] }]
+  filters: [{ name: 'Epic Assembly', extensions: ['lst'] }]
 }
 
 export default function openAssemblyFile(callback) {

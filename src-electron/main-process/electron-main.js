@@ -12,9 +12,7 @@ if (process.env.PROD) {
 let mainWindow
 
 function createWindow () {
-  /**
-   * Initial window options
-   */
+  // Initial window options.
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -28,23 +26,7 @@ function createWindow () {
     mainWindow = null
   })
   
-  // var menu = Menu.buildFromTemplate([
-  //   {
-  //     label: 'File',
-  //     submenu: [
-  //       {
-  //         label:'Load binary ...'
-  //       },
-  //       {type:'separator'},
-  //       {
-  //         label:'Exit',
-  //         click() {
-  //           app.quit()
-  //         }
-  //       }
-  //     ]
-  //   }
-  // ])
+  // Setup main menu.
   Menu.setApplicationMenu(appMenu(mainWindow)); 
 }
 

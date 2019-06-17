@@ -24,14 +24,6 @@
         </q-item>
         <q-item>
           <q-item-section avatar>
-            <q-icon name="folder" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Files</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section avatar>
             <q-icon name="bug_report" />
           </q-item-section>
           <q-item-section>

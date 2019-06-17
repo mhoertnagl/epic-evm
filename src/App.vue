@@ -5,8 +5,7 @@
 </template>
 
 <script>
-var ipc = require('electron').ipcRenderer; 
-// import openAssemblyFile from '@/modules/files/services/file-dialog'
+var ipc = require('electron').ipcRenderer
 
 export default {
   name: 'App',
