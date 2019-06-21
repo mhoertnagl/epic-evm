@@ -11,8 +11,8 @@ export default {
   name: 'App',
 
   created() {
-    ipc.on('load-binary', function(event, filePath) {
-      console.log(filePath);
+    ipc.on('read-line', function(event, line) {
+      console.log(line);
     })
   }
 }

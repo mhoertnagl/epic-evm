@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import openAssemblyFile from '../files/file-dialog'
+import readAssembly from '../files/file-read'
 
 export default function appMenu(mainWindow) {
   return Menu.buildFromTemplate([
@@ -16,6 +17,8 @@ export default function appMenu(mainWindow) {
 
 function loadBinary(mainWindow) {
   openAssemblyFile((filePath) => {
-    mainWindow.send('load-binary', filePath);
+    readAssembly(filePath, (line) => {
+      mainWindow.send('read-line', line);
+    })
   })
 }

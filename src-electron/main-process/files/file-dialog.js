@@ -1,4 +1,4 @@
-const { dialog } = require('electron')
+import { dialog } from 'electron'
 
 const options = {
   properties: ['openFile'],

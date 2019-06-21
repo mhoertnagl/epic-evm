@@ -14,7 +14,7 @@
 
     <q-drawer v-model="left" mini bordered>
       <q-list>
-        <q-item>
+        <q-item clickable v-ripple @click="$router.push('/')">
           <q-item-section avatar>
             <q-icon name="desktop_windows" />
           </q-item-section>
@@ -22,7 +22,7 @@
             <q-item-label>Virtual Machine</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item>
+        <q-item clickable v-ripple @click="$router.push('/debug')">
           <q-item-section avatar>
             <q-icon name="bug_report" />
           </q-item-section>
@@ -46,7 +46,7 @@
       </q-splitter>
     </q-page-container>
 
-    <q-footer bordered class="bg-grey-8 text-white">
+    <q-footer bordered class="bg-grey-8 text-white q-pl-md">
       Footer
     </q-footer>
   </q-layout>
