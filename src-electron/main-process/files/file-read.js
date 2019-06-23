@@ -3,6 +3,8 @@ import readline from 'readline'
 
 export default function readAssembly(filePath, callback) {
 
+  var file = []
+
   var rd = readline.createInterface({
     input: fs.createReadStream(filePath),
     //output: process.stdout,
@@ -10,6 +12,10 @@ export default function readAssembly(filePath, callback) {
   });
 
   rd.on('line', function(line) {
-    callback(line);
+    file.push(line);
+  });
+
+  rd.on('close', function() {
+    callback(file);
   });
 }

@@ -1,6 +1,6 @@
 <template>
-  <q-page class="flex flex-center">
-    Debug
+  <q-page class="flex">
+    <v-file></v-file>
   </q-page>
 </template>
 

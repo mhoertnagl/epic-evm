@@ -11,8 +11,9 @@ export default {
   name: 'App',
 
   created() {
-    ipc.on('read-line', function(event, line) {
-      console.log(line);
+    var self = this
+    ipc.on('read-file', function(event, file) {
+      self.$store.commit('setFile', file)
     })
   }
 }

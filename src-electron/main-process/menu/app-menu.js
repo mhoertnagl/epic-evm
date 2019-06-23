@@ -17,8 +17,8 @@ export default function appMenu(mainWindow) {
 
 function loadBinary(mainWindow) {
   openAssemblyFile((filePath) => {
-    readAssembly(filePath, (line) => {
-      mainWindow.send('read-line', line);
+    readAssembly(filePath, (file) => {
+      mainWindow.send('read-file', file);
     })
   })
 }
