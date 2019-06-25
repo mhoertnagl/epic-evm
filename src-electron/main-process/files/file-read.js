@@ -1,21 +1,31 @@
 import fs from 'fs'
 import readline from 'readline'
+import parseListingLine from '../assembly/parse-listing'
 
+// TODO: Ordentliche Kapselung. FileLoader interface, ListingFileLoader
+// TODO: Ordentliches VM setup.
 export default function readAssembly(filePath, callback) {
 
-  var file = []
+  var file = {
+    code: [],
+    lines: [],
+  }
 
   var rd = readline.createInterface({
     input: fs.createReadStream(filePath),
     //output: process.stdout,
     console: false
-  });
+  })
 
   rd.on('line', function(line) {
-    file.push(line);
-  });
+    let res = parseListingLine(line)
+    file.lines.push(res.line);
+    if (res.isIns) {
+      file.code.push(res.ins)
+    }
+  })
 
   rd.on('close', function() {
     callback(file);
-  });
+  })
 }

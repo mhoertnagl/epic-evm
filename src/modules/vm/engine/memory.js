@@ -18,6 +18,20 @@ export default class Memory extends Device {
     this.mem = Buffer.alloc(size << 2, 0)
   }
 
+  init (data) {
+    for (var i = 0; i < data.length; i++) {
+      this.mem.writeUInt32BE(data[i], i << 2)
+    }
+  }
+
+  dump () {
+    for (var i = 0; i < this.size; i++) {
+      const addr = i << 2
+      const ins = this.mem.readUInt32BE(addr)
+      console.log(`${addr}: ${ins}`)
+    }    
+  }
+
   /**
    * Reads the value at address {addr} on the device.
    *
