@@ -1,9 +1,10 @@
 import fs from 'fs'
 import readline from 'readline'
-import parseListingLine from '../assembly/parse-listing'
+//import parseListingLine from '../assembly/parse-listing'
 
 // TODO: Ordentliche Kapselung. FileLoader interface, ListingFileLoader
 // TODO: Ordentliches VM setup.
+// TODO: Engine in den main process.
 export default function readAssembly(filePath, callback) {
 
   var file = {

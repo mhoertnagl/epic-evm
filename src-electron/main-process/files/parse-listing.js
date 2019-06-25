@@ -5,7 +5,7 @@ export default function parseListingLine(line) {
       addr: 0
       ins: 0,
   }
-  let insRegex = /^(0x[0-9a-fA-F]{8})\s+(0x[0-9a-fA-F]{8}).*$/
+  let insRegex = /^(0x[0-9a-fA-F]{8})\s+(0x[0-9a-fA-F]{8})\s+(.*)$/
   let match = insRegex.match(line)
   console.log(match)
   if (match !== null) {
