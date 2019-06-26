@@ -14,8 +14,7 @@ export default class Cpu extends Device {
     /** 32bit general purpose registers and the IP. */
     this.regs = new Uint32Array(16)
 
-    /** CPU state register. */
-    this.csr = 0x1D000001
+    this.reset()
   }
 
   get gp_regs () {
@@ -28,6 +27,15 @@ export default class Cpu extends Device {
 
   get ip () {
     return this.regs[15]
+  }
+
+  reset () {
+    // Reset general purpose registers to 0.
+    for (var i = 0; i < this.regs.length; i++) {
+      this.regs[i] = 0
+    }
+    /** CPU state register. */
+    this.csr = 0x1D000001
   }
 
   step () {

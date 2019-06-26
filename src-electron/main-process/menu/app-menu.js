@@ -1,24 +1,15 @@
 import { app, BrowserWindow, Menu } from 'electron'
-import openAssemblyFile from '../files/file-dialog'
-import readAssembly from '../files/file-read'
+import loadFile from '../files/load-file'
 
-export default function appMenu(mainWindow) {
+export default function appMenu(app, view) {
   return Menu.buildFromTemplate([
     {
       label: 'File',
       submenu: [
-        { label:'Load binary ...', click() { loadBinary(mainWindow) } },
+        { label:'Load binary ...', click() { loadFile(app, view) } },
         { type:'separator' },
         { label:'Exit', click() { app.quit() } }
       ]
     }
   ])
-}
-
-function loadBinary(mainWindow) {
-  openAssemblyFile((filePath) => {
-    readAssembly(filePath, (file) => {
-      mainWindow.send('read-file', file);
-    })
-  })
 }

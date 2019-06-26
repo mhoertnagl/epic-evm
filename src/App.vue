@@ -12,7 +12,7 @@ export default {
 
   created() {
     var self = this
-    ipc.on('read-file', function(event, file) {
+    ipc.on('init-memory', (event, file) => {
       self.$store.commit('setFile', file)
     })
   }

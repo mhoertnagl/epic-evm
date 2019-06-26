@@ -5,7 +5,7 @@ const options = {
   filters: [{ name: 'Epic Assembly', extensions: ['lst'] }]
 }
 
-export default function openAssemblyFile(callback) {
+export default function openFile(callback) {
   dialog.showOpenDialog(options, fileNames => {
     if (fileNames) {
       callback(fileNames[0])
