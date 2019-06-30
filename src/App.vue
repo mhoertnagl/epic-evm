@@ -5,6 +5,8 @@
 </template>
 
 <script>
+// Eigenen window process für die vm.
+// https://dzone.com/articles/learning-electron-4-things-i-wish-i-knew-sooner
 var ipc = require('electron').ipcRenderer
 
 export default {
