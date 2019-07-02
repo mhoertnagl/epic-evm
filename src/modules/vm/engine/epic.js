@@ -5,6 +5,7 @@ import Memory from './memory'
 import Cpu from './cpu'
 
 export default class Epic {
+//module.exports = class Epic {
   
   constructor () {
     this.bus = new Bus()
@@ -20,6 +21,8 @@ export default class Epic {
     this.bus.connect(memoryLoc, this.mem)
     this.bus.connect(displayLoc, this.display)
     this.bus.connect(cpuLoc, this.cpu)
+    
+    console.log('VM instance initialized.')
   }
 
   get displayMemory () {

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import appMenu from './menu/app-menu'
-import Epic from './engine/epic'
+import createUiProcess from './create-ui-process'
 
 /**
  * Set `__statics` path to static files in production;
@@ -13,38 +13,14 @@ if (process.env.PROD) {
     .replace(/\\/g, '\\\\')
 }
 
-let mainWindow
-let epic
+let ui
 
 function createWindow() {
-  // Initial window options.
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    useContentSize: true,
-    //frame: false
-  })
-
-  mainWindow.loadURL(process.env.APP_URL)
-
-  mainWindow.on('closed', () => {
-    mainWindow = null
-  })
-  
-  // Setup main menu.
-  Menu.setApplicationMenu(appMenu(app, mainWindow)); 
-  
-  // Bootstrap virtual machine.
-  epic = new Epic()
+  ui = createUiProcess(app, process.env.APP_URL)
+  Menu.setApplicationMenu(appMenu(app, ui)); 
 }
 
 app.on('ready', createWindow)
-
-app.on('reset', epic.reset)
-//app.on('run', )
-app.on('step', epic.step)
-//app.on('pause', )
-//app.on('stop', )
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -53,7 +29,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  if (mainWindow === null) {
+  if (ui === null) {
     createWindow()
   }
 })

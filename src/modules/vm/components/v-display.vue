@@ -9,27 +9,29 @@
 </template>
 
 <script>
-import Display from '../engine/display'
-
 export default {
   name: 'Display',
 
   data () {
     return {
-      display: null
+      display: {
+        rows: 30,
+        cols: 80
+      }
     }
   },
 
   methods: {
     read (r, c) {
-      let addr = r * this.display.cols + c
-      let val = this.display.read(addr)
-      return String.fromCharCode(val)
+      // let addr = r * this.display.cols + c
+      // let val = this.display.read(addr)
+      // return String.fromCharCode(val)
+      return 0
     }
   },
 
   created () {
-    this.display = new Display()
+    // this.display = new Display()
   }
 }
 </script>

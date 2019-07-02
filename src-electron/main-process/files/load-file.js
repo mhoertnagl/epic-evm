@@ -1,11 +1,11 @@
 import openFile from './file-dialog'
 import processFile from './process-file'
 
-function loadFile(app, view) {
+export default function loadFile(mn, ui) {
   openFile((filePath) => {
     processFile(filePath, (file) => {
-      app.send('reset', file.code)
-      view.send('init-memory', file)
+      // vm.send('mn->vm[load]', vm, file.code)
+      ui.send('mn->ui[load]', file)
     })
   })
 }

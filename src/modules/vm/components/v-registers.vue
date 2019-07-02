@@ -48,8 +48,6 @@
 </template>
 
 <script>
-import Cpu from '../engine/cpu'
-
 export default {
   name: 'Registers',
 
@@ -60,7 +58,10 @@ export default {
         'r0', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7',
         'r8', 'r9', 'r10', 'r11', 'r12', 'fp', 'rp', 'ip'
       ],
-      cpu: null
+      cpu: {
+        gp_regs: [],
+        cs_reg: 0
+      }
     }
   },
 
@@ -69,7 +70,7 @@ export default {
   },
 
   created () {
-    this.cpu = new Cpu()
+
   }
 }
 </script>
