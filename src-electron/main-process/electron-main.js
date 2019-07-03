@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import appMenu from './menu/app-menu'
 import createUiProcess from './create-ui-process'
+import createVmProcess from '../vm-process/create-vm-process'
 
 /**
  * Set `__statics` path to static files in production;
@@ -14,9 +15,11 @@ if (process.env.PROD) {
 }
 
 let ui
+let vm
 
 function createWindow() {
   ui = createUiProcess(app, process.env.APP_URL)
+  vm = createVmProcess()
   Menu.setApplicationMenu(appMenu(app, ui)); 
 }
 

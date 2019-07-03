@@ -1,7 +1,6 @@
 import Device from './device'
 
 export default class Display extends Device {
-  mem = []
 
   constructor () {
     super()
