@@ -161,11 +161,11 @@ Condition Bits
 --------------------------------------------------------------------------------
 
       D <- signExt(REG[RA], 33) - signExt(REG[RB], 33)
-      
+
       E <- D == 0               // REG[RA] == REG[RB]
       L <- D[32] == 1           // REG[RA] < REG[RB]
       G <- ~E & ~L              // REG[RA] > REG[RB]
-      
+
       E <- REG[RA] == REG[RB]
       L <- REG[RA] < REG[RB]
       G <- REG[RA] > REG[RB]    // ~L & ~E
@@ -174,8 +174,8 @@ Condition Bits
 
        COND  | Mnemonic |
       -------+----------+------------------------------------------------
-       0 0 0 | nv       | Never execute the instruction. However, set CSR 
-             |          | condition flags if SET bit of the instruction 
+       0 0 0 | nv       | Never execute the instruction. However, set CSR
+             |          | condition flags if SET bit of the instruction
              |          | is enabled.
       -------+----------+------------------------------------------------
        0 0 1 | eq       | Equal
@@ -203,10 +203,10 @@ Condition Bits
        gt |  0    0    0    0    1    1    1    1
       ----+
 
-      C <- CSR[28] & INSTR[28] 
-         | CSR[27] & INSTR[27] 
+      C <- CSR[28] & INSTR[28]
+         | CSR[27] & INSTR[27]
          | CSR[26] & INSTR[26]
-         | INSTR[28] & INSTR[27] & INSTR[26]   
+         | INSTR[28] & INSTR[27] & INSTR[26]
 
 
 ================================================================================
@@ -229,7 +229,7 @@ Condition Bits
       ---------+----------------------  ---------+----------------------
        0 1 1 0 | xor                     1 1 1 0 | tst
       ---------+----------------------  ---------+----------------------
-       0 1 1 1 | nor                     1 1 1 1 | mov/ldc (LoaD Constant)
+       0 1 1 1 | nor                     1 1 1 1 | mov
 
 
        SOP | Mnemonic                    SOP | Mnemonic
@@ -332,7 +332,7 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 Note, that bits 3-1 are reserved for future enhancements and are expected to be
 all zeros to guarantee compatibility with upcoming ISA releases.
 
-
+// TODO: CO-PROCESSOR Commands can be part of MEM scheme ^.
 --------------------------------------------------------------------------------
  CO-PROCESSOR
 --------------------------------------------------------------------------------
