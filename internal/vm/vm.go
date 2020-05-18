@@ -63,6 +63,7 @@ func (m *VM) dpr(ins uint32) {
 }
 
 func (m *VM) imm(ins uint32) {
+
 	ra := ra(ins)
 	va := m.regs[ra]
 	vb := imm16(ins)
@@ -74,37 +75,7 @@ func (m *VM) imm(ins uint32) {
 
 func (m *VM) alu(ins uint32, va uint32, vb uint32) {
 	rd := rd(ins)
-	switch aluop(ins) {
-	case OpADD:
-		m.regs[rd] = uint32(int32(va) + int32(vb))
-	case OpSUB:
-		m.regs[rd] = uint32(int32(va) - int32(vb))
-	case OpMUL:
-		m.regs[rd] = uint32(int32(va) * int32(vb))
-	case OpDIV:
-		m.regs[rd] = uint32(int32(va) / int32(vb))
-	case OpAND:
-		m.regs[rd] = va & vb
-	case OpOOR:
-		m.regs[rd] = va | vb
-	case OpXOR:
-		m.regs[rd] = va ^ vb
-	case OpNOR:
-		m.regs[rd] = ^(va | vb)
-	case OpADU:
-		m.regs[rd] = va + vb
-	case OpSBU:
-		m.regs[rd] = va - vb
-	case OpMLU:
-		m.regs[rd] = va * vb
-	case OpDVU:
-		m.regs[rd] = va / vb
-	case OpCMP:
-	case OpCPU:
-	case OpTST:
-	case OpMOV:
-		m.regs[rd] = vb
-	}
+	m.regs[rd] = Alu(aluop(ins), va, vb)
 }
 
 func (m *VM) shift(vb uint32, op SOp, shamt uint32) uint32 {
