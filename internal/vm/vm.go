@@ -2,7 +2,6 @@ package vm
 
 import (
 	"encoding/binary"
-	"math/bits"
 )
 
 // TODO: Sign extension is a problem. Define some unit tests.
@@ -53,19 +52,20 @@ func (m *VM) dpr(ins uint32) {
 	ra := ra(ins)
 	va := m.regs[ra]
 	var vb uint32
+	// TODO: Je nach Operation sign oder zero extend.
 	if isImm12(ins) {
 		vb = imm12(ins)
 	} else {
 		vb = m.regs[rb(ins)]
 	}
-	vb = m.shift(vb, sop(ins), shamt(ins))
+	vb = Shift(vb, sop(ins), shamt(ins))
 	m.alu(ins, va, vb)
 }
 
 func (m *VM) imm(ins uint32) {
-
 	ra := ra(ins)
 	va := m.regs[ra]
+	// TODO: Je nach Operation sign oder zero extend.
 	vb := imm16(ins)
 	if isSll16(ins) {
 		vb = vb << 16
@@ -75,26 +75,29 @@ func (m *VM) imm(ins uint32) {
 
 func (m *VM) alu(ins uint32, va uint32, vb uint32) {
 	rd := rd(ins)
-	m.regs[rd] = Alu(aluop(ins), va, vb)
+	rs := Alu(aluop(ins), va, vb)
+	// TODO: Return value if cond are met
+	m.regs[rd] = uint32(rs)
+	// TODO: Some operations return a value and some always change cond
+	if isSetCond(ins) {
+		m.setCond(rs)
+	}
 }
 
-func (m *VM) shift(vb uint32, op SOp, shamt uint32) uint32 {
-	switch op {
-	case OpSLL:
-		return vb << shamt
-	case OpROL:
-		return bits.RotateLeft32(vb, int(shamt))
-	case OpSRL:
-		return vb >> shamt
-	case OpSRA:
-		return uint32(int32(vb) >> shamt)
-	}
-	return 0
+func (m *VM) setCond(rs uint64) {
+	eq := rs == 0
+	lt := Bit(rs, 32) == 1
+	gt := !eq && !lt
+
+	m.csr = SetBool(m.csr, 26, eq)
+	m.csr = SetBool(m.csr, 27, lt)
+	m.csr = SetBool(m.csr, 28, gt)
 }
 
 func (m *VM) ins(code []byte) uint32 {
 	ip := m.regs[IP]
-	return binary.BigEndian.Uint32(code[ip : ip+4])
+	in := code[ip : ip+4]
+	return binary.BigEndian.Uint32(in)
 }
 
 // func (m *VM) ip() uint32 {

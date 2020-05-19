@@ -265,6 +265,7 @@ Condition Bits
       | IMM12                                          | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
+      TODO: Zero Extend?
       REG[RD] = REG[RA] + signExt(IMM12, 32)
 
       [!] add[cond] rd ra sImm12
@@ -339,7 +340,7 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 
        CPID    | Co-Processor
       ---------+--------------------------------------------------------
-       0 0 0 0 | Special CPU registers.
+       0 0     | Special CPU registers.
       ---------+--------------------------------------------------------
        others  | Co-Processor slot X
 

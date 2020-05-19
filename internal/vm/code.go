@@ -93,6 +93,10 @@ func isSll16(ins uint32) bool {
 	return bitSet(ins, 24)
 }
 
+func isSetCond(ins uint32) bool {
+	return bitSet(ins, 25)
+}
+
 func bitsAt(val uint32, p uint8, s uint8) uint32 {
 	return (val >> s) & ((1 << p) - 1)
 }
