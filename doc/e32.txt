@@ -295,6 +295,10 @@ Condition Bits
       [!] add[cond] rd sImm16 << 16
 
 
+      TODO: Unbenutzt
+       - Bit 24 = 0, Bit 11 = 1
+       - Bits 4-0 = 1111, Bits 23-20 != 0000
+
 --------------------------------------------------------------------------------
  MEMORY - STW
 --------------------------------------------------------------------------------
@@ -326,7 +330,7 @@ all zeros to guarantee compatibility with upcoming ISA releases.
 
       MEM[RA + signExt(IMM12, 32)] = REG[RD]
 
-      [!] stw[cond] rd ra '[' sImm12 ']'
+      [!] stw[cond] rd ra '[' s12 ']'
 
 Note, that bits 3-1 are reserved for future enhancements and are expected to be
 all zeros to guarantee compatibility with upcoming ISA releases.

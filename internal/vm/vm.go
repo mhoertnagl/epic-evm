@@ -13,80 +13,124 @@ type VM struct {
 	cir  uint32
 	csr  uint32
 	regs [16]uint32
+	mem  []byte
 }
 
-func NewVM() *VM {
-	return &VM{}
+func NewVM(mem []byte) *VM {
+	return &VM{mem: mem}
 }
 
-func (m *VM) Run(code []byte) {
+func (m *VM) Run() {
 	for {
-		ins := m.ins(code)
-		switch op(ins) {
-		case OpDPR:
-			m.dpr(ins)
-			if rd(ins) != IP {
+		ins := m.ins(m.mem)
+		if m.condTrue(ins) {
+			switch op(ins) {
+			case OpDPR:
+				m.execDPR(ins)
+				if doesNotWriteIP(ins) {
+					m.regs[IP] += 4
+				}
+			case OpIMM:
+				m.execIMM(ins)
+				if doesNotWriteIP(ins) {
+					m.regs[IP] += 4
+				}
+			case OpMEM:
 				m.regs[IP] += 4
+			case OpNA3:
+				panic("unsopported NA3 operation")
+			case OpNA4:
+				panic("unsopported NA4 operation")
+			case OpNA5:
+				panic("unsopported NA5 operation")
+			case OpNA6:
+				panic("unsopported NA6 operation")
+			case OpBRA:
 			}
-		case OpIMM:
-			m.imm(ins)
-			if rd(ins) != IP {
-				m.regs[IP] += 4
-			}
-		case OpMEM:
+		} else {
 			m.regs[IP] += 4
-		case OpNA3:
-			panic("unsopported NA3 operation")
-		case OpNA4:
-			panic("unsopported NA4 operation")
-		case OpNA5:
-			panic("unsopported NA5 operation")
-		case OpNA6:
-			panic("unsopported NA6 operation")
-		case OpBRA:
 		}
 	}
 }
 
-func (m *VM) dpr(ins uint32) {
+func (m *VM) execDPR(ins uint32) {
 	ra := ra(ins)
 	va := m.regs[ra]
 	var vb uint32
-	// TODO: Je nach Operation sign oder zero extend.
 	if isImm12(ins) {
 		vb = imm12(ins)
+		if ShoudSignExtend(ins) {
+			vb = Sext(vb, 12)
+		}
 	} else {
 		vb = m.regs[rb(ins)]
+		vb = Shift(vb, sop(ins), shamt(ins))
 	}
-	vb = Shift(vb, sop(ins), shamt(ins))
 	m.alu(ins, va, vb)
 }
 
-func (m *VM) imm(ins uint32) {
+func (m *VM) execIMM(ins uint32) {
 	ra := ra(ins)
 	va := m.regs[ra]
-	// TODO: Je nach Operation sign oder zero extend.
 	vb := imm16(ins)
+	if ShoudSignExtend(ins) {
+		vb = Sext(vb, 16)
+	}
 	if isSll16(ins) {
 		vb = vb << 16
 	}
 	m.alu(ins, va, vb)
 }
 
+func (m *VM) execMEM(ins uint32) {
+	rd := rd(ins)
+	ra := ra(ins)
+	va := m.regs[ra]
+	var vb uint32
+	if isImm12(ins) {
+		vb = imm12(ins)
+		vb = Sext(vb, 12)
+	} else {
+		vb = m.regs[rb(ins)]
+		vb = Shift(vb, sop(ins), shamt(ins))
+	}
+	a := uint32(int32(va) + int32(vb))
+	if isLoad(ins) {
+		m.regs[rd] = read32(m.mem, a)
+	} else {
+		write32(m.mem, a, m.regs[rd])
+	}
+
+	// Sign extend the value in register RD and set condition flags accordingly.
+	if ShouldSetCond(ins) {
+		m.setCond(Sext64(m.regs[rd]))
+	}
+}
+
 func (m *VM) alu(ins uint32, va uint32, vb uint32) {
 	rd := rd(ins)
 	rs := Alu(aluop(ins), va, vb)
-	// TODO: Return value if cond are met
-	m.regs[rd] = uint32(rs)
-	// TODO: Some operations return a value and some always change cond
-	if isSetCond(ins) {
+
+	if ShouldWriteBack(ins) {
+		m.regs[rd] = uint32(rs)
+	}
+
+	if ShouldSetCond(ins) {
 		m.setCond(rs)
 	}
 }
 
+func (m *VM) condTrue(ins uint32) bool {
+	gt := Bit(m.csr, 28) & Bit(ins, 28)
+	lt := Bit(m.csr, 27) & Bit(ins, 27)
+	eq := Bit(m.csr, 26) & Bit(ins, 26)
+	al := Bit(ins, 28) & Bit(ins, 27) & Bit(ins, 26)
+	return (gt | lt | eq | al) == 1
+}
+
 func (m *VM) setCond(rs uint64) {
 	eq := rs == 0
-	lt := Bit(rs, 32) == 1
+	lt := Bit64(rs, 32) == 1
 	gt := !eq && !lt
 
 	m.csr = SetBool(m.csr, 26, eq)
@@ -95,11 +139,17 @@ func (m *VM) setCond(rs uint64) {
 }
 
 func (m *VM) ins(code []byte) uint32 {
-	ip := m.regs[IP]
-	in := code[ip : ip+4]
-	return binary.BigEndian.Uint32(in)
+	return read32(code, m.regs[IP])
 }
 
-// func (m *VM) ip() uint32 {
-// 	return m.regs[IP]
-// }
+func doesNotWriteIP(ins uint32) bool {
+	return (ShouldWriteBack(ins) && rd(ins) == IP) == false
+}
+
+func read32(data []byte, a uint32) uint32 {
+	return binary.BigEndian.Uint32(data[a : a+4])
+}
+
+func write32(data []byte, a uint32, v uint32) {
+	binary.BigEndian.PutUint32(data[a:a+4], v)
+}

@@ -9,8 +9,12 @@ func Sext64(word uint32) uint64 {
 	return uint64((int64(word) << 32) >> 32)
 }
 
-func Bit(word uint64, pos uint32) uint32 {
+func Bit(word uint32, pos uint32) uint32 {
 	return uint32((word << (31 - pos)) >> 31)
+}
+
+func Bit64(word uint64, pos uint32) uint32 {
+	return uint32((word << (63 - pos)) >> 63)
 }
 
 func SetBool(word uint32, pos uint32, bit bool) uint32 {

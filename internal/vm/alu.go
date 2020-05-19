@@ -2,6 +2,49 @@ package vm
 
 import "math/bits"
 
+func ShoudSignExtend(ins uint32) bool {
+	switch aluop(ins) {
+	case OpADD:
+		return true
+	case OpSUB:
+		return true
+	case OpMUL:
+		return true
+	case OpDIV:
+		return true
+	case OpCMP:
+		return true
+	default:
+		return false
+	}
+}
+
+func ShouldSetCond(ins uint32) bool {
+	switch aluop(ins) {
+	case OpCMP:
+		return true
+	case OpCPU:
+		return true
+	case OpTST:
+		return true
+	default:
+		return isSetCond(ins)
+	}
+}
+
+func ShouldWriteBack(ins uint32) bool {
+	switch aluop(ins) {
+	case OpCMP:
+		return false
+	case OpCPU:
+		return false
+	case OpTST:
+		return false
+	default:
+		return true
+	}
+}
+
 func Shift(vb uint32, op SOp, shamt uint32) uint32 {
 	switch op {
 	case OpSLL:

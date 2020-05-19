@@ -61,7 +61,7 @@ func TestSextNegative32(t *testing.T) {
 }
 
 func TestBit1(t *testing.T) {
-	i := uint64(0x01000000)
+	i := uint32(0x01000000)
 	a := vm.Bit(i, 24)
 	if a != 1 {
 		t.Errorf("Bit %v of 0x%x is not set.", 24, a)
@@ -69,7 +69,7 @@ func TestBit1(t *testing.T) {
 }
 
 func TestBit2(t *testing.T) {
-	i := uint64(0x00000001)
+	i := uint32(0x00000001)
 	a := vm.Bit(i, 0)
 	if a != 1 {
 		t.Errorf("Bit %v of 0x%x is not set.", 0, a)
@@ -77,8 +77,32 @@ func TestBit2(t *testing.T) {
 }
 
 func TestBit3(t *testing.T) {
-	i := uint64(0x80000000)
+	i := uint32(0x80000000)
 	a := vm.Bit(i, 31)
+	if a != 1 {
+		t.Errorf("Bit %v of 0x%x is not set.", 31, a)
+	}
+}
+
+func TestBit64_1(t *testing.T) {
+	i := uint64(0x01000000)
+	a := vm.Bit64(i, 24)
+	if a != 1 {
+		t.Errorf("Bit %v of 0x%x is not set.", 24, a)
+	}
+}
+
+func TestBit64_2(t *testing.T) {
+	i := uint64(0x00000001)
+	a := vm.Bit64(i, 0)
+	if a != 1 {
+		t.Errorf("Bit %v of 0x%x is not set.", 0, a)
+	}
+}
+
+func TestBit64_3(t *testing.T) {
+	i := uint64(0x80000000)
+	a := vm.Bit64(i, 31)
 	if a != 1 {
 		t.Errorf("Bit %v of 0x%x is not set.", 31, a)
 	}
