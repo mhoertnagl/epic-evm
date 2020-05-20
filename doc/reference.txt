@@ -1,45 +1,48 @@
+================================================================================
+ CPU REGISTERS
+================================================================================
+
+The EPIC processor has a total of 18 registers. Of these 16 are general purpose
+registers, including the instruction pointer.
+// TODO: CPU registers.
+
+All registers are 32 bits wide.
+
 --------------------------------------------------------------------------------
  GENERAL PURPOSE REGISTERS
 --------------------------------------------------------------------------------
 
+The general purpose registers a directly accessible to the programmer and serve
+as storage locations for immediate computations. They are addressed by their
+mnemonics r0 to r15.
+Because of their special roles r13, r14 and r15 have alternative names sp, rp
+and ip respectively.
+Register r15 (ip) is the instruction pointer. Writing to this register will
+alter the program execution flow.
+
        Bits    | Mn. | Alt. | Role
       ---------+-----+------+-------------------------------------------
        0 0 0 0 | r0  |      |
-      ---------+-----+------+-------------------------------------------
        0 0 0 1 | r1  |      |
-      ---------+-----+------+-------------------------------------------
        0 0 1 0 | r2  |      |
-      ---------+-----+------+-------------------------------------------
        0 0 1 1 | r3  |      |
-      ---------+-----+------+-------------------------------------------
        0 1 0 0 | r4  |      |
-      ---------+-----+------+-------------------------------------------
        0 1 0 1 | r5  |      |
-      ---------+-----+------+-------------------------------------------
        0 1 1 0 | r6  |      |
-      ---------+-----+------+-------------------------------------------
        0 1 1 1 | r7  |      |
-      ---------+-----+------+-------------------------------------------
        1 0 0 0 | r8  |      |
-      ---------+-----+------+-------------------------------------------
        1 0 0 1 | r9  |      |
-      ---------+-----+------+-------------------------------------------
        1 0 1 0 | r10 |      |
-      ---------+-----+------+-------------------------------------------
        1 0 1 1 | r11 |      |
-      ---------+-----+------+-------------------------------------------
        1 1 0 0 | r12 |      |
       ---------+-----+------+-------------------------------------------
        1 1 0 1 | r13 | sp   | stack pointer
-      ---------+-----+------+-------------------------------------------
        1 1 1 0 | r14 | rp   | return pointer
-      ---------+-----+------+-------------------------------------------
        1 1 1 1 | r15 | ip   | instruction pointer
 
 --------------------------------------------------------------------------------
  SPECIAL CPU REGISTERS
 --------------------------------------------------------------------------------
-
 
        Bits    | Mn. | Alt. | Role
       ---------+-----+------+-------------------------------------------
@@ -47,19 +50,14 @@
       ---------+-----+------+-------------------------------------------
        0 0 0 1 | csr |      | CPU status register
 
-
-================================================================================
- SPECIAL CPU REGISTERS
-================================================================================
-
 In KERNEL MODE the following two operations allow to read and write special CPU
 registers.
 
       sts cir r0
       lds r0 cir
 
---------------------------------------------------------------------------------
- CPU INFO REGISTER - CIR
+
+CPU INFO REGISTER - CIR
 --------------------------------------------------------------------------------
 
 The CPU INFO REGISTER (CIR) contains information about the version of the CPU.
@@ -75,12 +73,12 @@ The CPU INFO REGISTER (CIR) contains information about the version of the CPU.
 
 The CPU MODEL field describes the overall architectural model. For the first
 release named EPIC-0 rev. 1.0, this is going to be a three-stage pipelined CPU.
-   CPU MAJOR REVISION and CPU MINOR REVISION contain the version of the CPU
+  CPU MAJOR REVISION and CPU MINOR REVISION contain the version of the CPU
 revision. A change in major revision reflects a breaking change and may cause
 some legacy application code to display unexpected behavior. A change in minor
 revision however indicates additions and improvements to the design without
 corrupting the backwards compatibility of the CPU.
-   Bug-fixes may or may not introduce breaking changes and will therefore either
+  Bug-fixes may or may not introduce breaking changes and will therefore either
 trigger major or minor revisions.
 
 For EPIC-0 rev. 1.0 the register will be set to:
@@ -119,14 +117,14 @@ routine that sets the CPU INFO REGISTER with the appropriate version info:
 The routine is stored in the CPU bootstrap ROM.
 
 
---------------------------------------------------------------------------------
- CPU STATE REGISTER - CSR
+
+CPU STATE REGISTER - CSR
 --------------------------------------------------------------------------------
 
 The CPU STATE REGISTER contains the state of the CPU.
-   The COND bits 28-26 reflect the last result of a testing function or an
+  The COND bits 28-26 reflect the last result of a testing function or an
 operation with the SET flag enabled.
-   The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
+  The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
 to various privileges or restrictions.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
@@ -144,33 +142,47 @@ Mode Bits
 
 The MODE bits determine execution restrictions for certain instructions. A CPU
 in KERNEL MODE is able to execute any instruction and can change any registers.
-// Exception Mode ist wohl überflüssig.
-In User MODE, the only way to execute restricted instructions or access internal
-CPU registers is a switch to Kernel MODE via a system call instruction (sys).
+// TODO: Exception Mode ist wohl überflüssig.
+In USER MODE, the only way to execute restricted instructions or access internal
+CPU registers is a switch to KERNEL MODE via a system call instruction (sys).
 
-       MODE  |
+       MODE  | Mode Name
       -------+----------------
-       0 0 1 | Kernel MODE
+       0 0 1 | Kernel
       -------+----------------
-       0 1 0 | Exception MODE
+       0 1 0 | Exception
       -------+----------------
-       1 0 0 | User MODE
+       1 0 0 | User
 
 
 Condition Bits
 --------------------------------------------------------------------------------
 
+Every EPIC instruction contains a three bit condition block. Whether an
+instruction will be executed will be determined by this condition block and the
+corresponding condition block of the CPU STATE REGISTER.
+
       D <- signExt(REG[RA], 33) - signExt(REG[RB], 33)
 
-      E <- D == 0               // REG[RA] == REG[RB]
-      L <- D[32] == 1           // REG[RA] < REG[RB]
-      G <- ~E & ~L              // REG[RA] > REG[RB]
+      EQ <- D == 0               // REG[RA] == REG[RB]
+      LT <- D[32] == 1           // REG[RA] < REG[RB]
+      GT <- ~EQ & ~LT            // REG[RA] > REG[RB]
 
       E <- REG[RA] == REG[RB]
       L <- REG[RA] < REG[RB]
       G <- REG[RA] > REG[RB]    // ~L & ~E
 
-      V <-
+      C <- CSR[28] & INSTR[28]
+         | CSR[27] & INSTR[27]
+         | CSR[26] & INSTR[26]
+         | INSTR[28] & INSTR[27] & INSTR[26]
+
+
+================================================================================
+ INSTRUCTION CONDITIONS
+================================================================================
+
+The following conditions can be attached to any instruction:
 
        COND  | Mnemonic |
       -------+----------+------------------------------------------------
@@ -194,23 +206,30 @@ Condition Bits
              |          | default behavior if the essembler instruction
              |          | lacks an explicit mnemonic condition modifier.
 
+The following is an implementation of Euclid's Greatest Common Divisor algorithm
+leveraging some of the instructions:
+
+      @Math.gcd
+          cmp   r0  r1
+          sublt r1  r0
+          subgt r0  r1
+          brane @Math.gcd
+          ret
+
+
+
           | nv | eq | lt | le | gt | ge | ne | al |
       ----+----+----+----+----+----+----+----+----+
-       eq |  0    1    0    1    0    1    0    1
+       EQ |  0    1    0    1    0    1    0    1
       ----+
-       lt |  0    0    1    1    0    0    1    1
+       LT |  0    0    1    1    0    0    1    1
       ----+
-       gt |  0    0    0    0    1    1    1    1
+       GT |  0    0    0    0    1    1    1    1
       ----+
-
-      C <- CSR[28] & INSTR[28]
-         | CSR[27] & INSTR[27]
-         | CSR[26] & INSTR[26]
-         | INSTR[28] & INSTR[27] & INSTR[26]
 
 
 ================================================================================
- INSTRUCTION SET
+ DATA PROCESSING INSTRUCTIONS
 ================================================================================
 
        ALU     | Mnemonic                ALU     | Mnemonic
@@ -238,8 +257,9 @@ Condition Bits
       -----+--------------------------  -----+--------------------------
        0 1 | rol (<<>)                   1 1 | sra (>>>)
 
+
 --------------------------------------------------------------------------------
- DATA PROCESSING - ADD
+ ADD - Signed Addition
 --------------------------------------------------------------------------------
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
@@ -251,7 +271,7 @@ Condition Bits
       | RB            | 0 | SOP   | SHAMT              | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      REG[RD] = REG[RA] + shift(REG[RB], sop, shamt)
+      REG[RD] = REG[RA] + shift(REG[RB], SOP, SHAMT)
 
       [!] add[cond] rd ra rb [sop shamt]
 
@@ -299,8 +319,13 @@ Condition Bits
        - Bit 24 = 0, Bit 11 = 1
        - Bits 4-0 = 1111, Bits 23-20 != 0000
 
+
+================================================================================
+ MEMORY INSTRUCTIONS
+================================================================================
+
 --------------------------------------------------------------------------------
- MEMORY - STW
+ STW - Store Word
 --------------------------------------------------------------------------------
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
@@ -309,15 +334,15 @@ Condition Bits
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | RB            | 0   0   0   0    0   0   0   0 | 0   0   0 | 0 |
+      | RB            | 0 | SOP   | SHAMT              | 0   0   0 | 0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       MEM[RA + RB] = REG[RD]
 
-      [!] stw[cond] rd ra '[' rb ']'
+      [!] stw[cond] rd ra '[' rb [sop shamt] ']'
 
-Note, that bits 11-1 are reserved for future enhancements and are expected to be
-all zeros to guarantee compatibility with upcoming ISA releases.
+// Note, that bits 11-1 are reserved for future enhancements and are expected to be
+// all zeros to guarantee compatibility with upcoming ISA releases.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
