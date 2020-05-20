@@ -1,3 +1,18 @@
+2020-05-20                                                                  v1.0
+
+
+
+                      EEEEE  PPPPP   II   CCCC      0000
+                      EE     PP  PP  II  CC  CC    00  00
+                      EEEEE  PPPPP   II  CC        00  00
+                      EE     PP      II  CC  CC    00  00
+                      EEEEE  PP      II   CCCC      0000
+
+                            ARCHITECTURE REFERENCE
+
+
+
+
 ================================================================================
  CPU REGISTERS
 ================================================================================
@@ -162,20 +177,21 @@ Every EPIC instruction contains a three bit condition block. Whether an
 instruction will be executed will be determined by this condition block and the
 corresponding condition block of the CPU STATE REGISTER.
 
-      D <- signExt(REG[RA], 33) - signExt(REG[RB], 33)
+      D <- sign(REG[RA]) - sign(REG[RB])
 
-      EQ <- D == 0               // REG[RA] == REG[RB]
-      LT <- D[32] == 1           // REG[RA] < REG[RB]
-      GT <- ~EQ & ~LT            // REG[RA] > REG[RB]
+      EQ <- D == 0
+      LT <- D[32] == 1
+      GT <- ~EQ & ~LT
 
-      E <- REG[RA] == REG[RB]
-      L <- REG[RA] < REG[RB]
-      G <- REG[RA] > REG[RB]    // ~L & ~E
+      def set_cond(rs)
+        CSR[26] = rs == 0
+        CSR[27] = rs[32] == 1
+        CSR[28] = ~(CSR[27] | CSR[26])
 
-      C <- CSR[28] & INSTR[28]
-         | CSR[27] & INSTR[27]
-         | CSR[26] & INSTR[26]
-         | INSTR[28] & INSTR[27] & INSTR[26]
+      C = CSR[28] & INSTR[28]
+        | CSR[27] & INSTR[27]
+        | CSR[26] & INSTR[26]
+        | INSTR[28] & INSTR[27] & INSTR[26]
 
 
 ================================================================================
@@ -257,10 +273,18 @@ leveraging some of the instructions:
       -----+--------------------------  -----+--------------------------
        0 1 | rol (<<>)                   1 1 | sra (>>>)
 
+      // TODO: Unbenutzt
+       - Bit 24 = 0, Bit 11 = 1
+       - Bits 4-0 = 1111, Bits 23-20 != 0000
 
 --------------------------------------------------------------------------------
  ADD - Signed Addition
 --------------------------------------------------------------------------------
+
+Adds the two signed intergers in registers RA and RB, then stores the result to
+register RD. If bit S is 1, evaluates the condition flags for the result.
+
+      [!] add[cond] rd ra rb [sop shamt]
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -271,9 +295,20 @@ leveraging some of the instructions:
       | RB            | 0 | SOP   | SHAMT              | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      REG[RD] = REG[RA] + shift(REG[RB], SOP, SHAMT)
+      rs      = sign(REG[RA]) + shift(sign(REG[RB]), SOP, SHAMT)
+      REG[RD] = rs[31:0]
+      if S == 1
+        set_cond(rs)
 
-      [!] add[cond] rd ra rb [sop shamt]
+Note that bit 11 is reserved for future enhancements and is expected to be zero
+to guarantee compatibility with upcoming ISA releases.
+
+
+Adds the signed interger in register RA and the sign extended 12 bit immediate
+value IMM12, then stores the result to register RD. If bit S is 1, evaluates
+the condition flags for the result.
+
+      [!] add[cond] rd ra s12
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -284,9 +319,17 @@ leveraging some of the instructions:
       | IMM12                                          | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      REG[RD] = REG[RA] + signExt(IMM12, 32)
+      rs      = sign(REG[RA]) + sign(IMM12)
+      REG[RD] = rs[31:0]
+      if S == 1
+        set_cond(rs)
 
-      [!] add[cond] rd ra s12
+
+Adds the sign extended 16 bit immediate value IMM16 to the signed integer in
+register RD , then stores the result to register RD again. If bit S is 1,
+evaluates the condition flags for the result.
+
+      [!] add[cond] rd sImm16
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -297,9 +340,17 @@ leveraging some of the instructions:
                                                        | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      REG[RD] = REG[RD] + signExt(IMM16, 32)
+      rs      = sign(REG[RA]) + sign(IMM16)
+      REG[RD] = rs[31:0]
+      if S == 1
+        set_cond(rs)
 
-      [!] add[cond] rd sImm16
+
+Adds the sign extended 16 bit immediate value IMM16 shifted to the left by 16
+bit to the signed integer in register RD , then stores the result to register RD
+again. If bit S is 1, evaluates the condition flags for the result.
+
+      [!] add[cond] rd sImm16 << 16
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -310,23 +361,26 @@ leveraging some of the instructions:
                                                        | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      REG[RD] = REG[RD] + (IMM16 << 16)
-
-      [!] add[cond] rd sImm16 << 16
-
-
-      TODO: Unbenutzt
-       - Bit 24 = 0, Bit 11 = 1
-       - Bits 4-0 = 1111, Bits 23-20 != 0000
+      rs      = sign(REG[RA]) + sign(IMM16 << 16)
+      REG[RD] = rs[31:0]
+      if S == 1
+        set_cond(rs)
 
 
 ================================================================================
  MEMORY INSTRUCTIONS
 ================================================================================
 
+// TODO: stw, ldw, sts, lds
+
+
 --------------------------------------------------------------------------------
  STW - Store Word
 --------------------------------------------------------------------------------
+
+// TODO: Description.
+
+      [!] stw[cond] rd ra '[' rb [sop shamt] ']'
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -337,12 +391,15 @@ leveraging some of the instructions:
       | RB            | 0 | SOP   | SHAMT              | 0   0   0 | 0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      MEM[RA + RB] = REG[RD]
+      adr      = zero(REG[RA]) + shift(sign(REG[RB]), SOP, SHAMT)
+      MEM[adr] = REG[RD]
+      if S == 1
+        set_cond(sign(REG[RD]))
 
-      [!] stw[cond] rd ra '[' rb [sop shamt] ']'
 
-// Note, that bits 11-1 are reserved for future enhancements and are expected to be
-// all zeros to guarantee compatibility with upcoming ISA releases.
+// TODO: Description.
+
+      [!] stw[cond] rd ra '[' s12 ']'
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -353,17 +410,18 @@ leveraging some of the instructions:
       | IMM12                                          | 0   0   0 | 0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      MEM[RA + signExt(IMM12, 32)] = REG[RD]
-
-      [!] stw[cond] rd ra '[' s12 ']'
+      adr     = zero(REG[RA]) + sign(IMM12)
+      REG[RD] = MEM[adr]
+      if S == 1
+        set_cond(sign(REG[RD]))
 
 Note, that bits 3-1 are reserved for future enhancements and are expected to be
 all zeros to guarantee compatibility with upcoming ISA releases.
 
-// TODO: CO-PROCESSOR Commands can be part of MEM scheme ^.
---------------------------------------------------------------------------------
- CO-PROCESSOR
---------------------------------------------------------------------------------
+
+================================================================================
+ CO-PROCESSOR INSTRUCTIONS
+================================================================================
 
        CPID    | Co-Processor
       ---------+--------------------------------------------------------
@@ -371,16 +429,19 @@ all zeros to guarantee compatibility with upcoming ISA releases.
       ---------+--------------------------------------------------------
        others  | Co-Processor slot X
 
+--------------------------------------------------------------------------------
+ STS - Store Special
+--------------------------------------------------------------------------------
 
-       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 0 | 1 | 1 | COND      | CPID  ||
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                                       |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
+--------------------------------------------------------------------------------
+ LDS - Load Special
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ -
+--------------------------------------------------------------------------------
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -388,38 +449,11 @@ all zeros to guarantee compatibility with upcoming ISA releases.
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                       | CPID          |
+                                                                       |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
 --------------------------------------------------------------------------------
- CO-PROCESSOR 0 - ACCESSING SPECIAL CPU REGISTERS
---------------------------------------------------------------------------------
-
-
-      31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 0 | 1 | 1 | COND      | 0   0 || RS            | RA            |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-        0   0   0   0   0   0   0   0    0   0   0   0 | 0   0   0   0 |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-
-      [!] sts[cond] rs ra
-
-      31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 0 | 1 | 1 | COND      | 0   0 || RD            | RS            |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-        0   0   0   0   0   0   0   0    0   0   0   1 | 0   0   0   0 |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-
-      [!] lds[cond] rd rs
-
---------------------------------------------------------------------------------
- SYSCALL
+ -
 --------------------------------------------------------------------------------
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16

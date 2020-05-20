@@ -4,11 +4,6 @@ import (
 	"encoding/binary"
 )
 
-// TODO: Sign extension is a problem. Define some unit tests.
-// TODO: signed() - Turns a bit number into an integer
-// TODO: cond flags
-// TODO: set cond
-
 type VM struct {
 	cir  uint32
 	csr  uint32
@@ -94,7 +89,8 @@ func (m *VM) execMEM(ins uint32) {
 		vb = m.regs[rb(ins)]
 		vb = Shift(vb, sop(ins), shamt(ins))
 	}
-	a := uint32(int32(va) + int32(vb))
+	// a := uint32(int64(uint64(va)) + int64(Sext64(vb)))
+	a := uint32(int64(va) + int64(Sext64(vb)))
 	if isLoad(ins) {
 		m.regs[rd] = read32(m.mem, a)
 	} else {
