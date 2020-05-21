@@ -19,6 +19,7 @@ func ShoudSignExtend(ins uint32) bool {
 	}
 }
 
+// TODO: Not necessary, assembler will set S flag.
 func ShouldSetCond(ins uint32) bool {
 	switch aluop(ins) {
 	case OpCMP:
@@ -59,6 +60,8 @@ func Shift(vb uint32, op SOp, shamt uint32) uint32 {
 	panic("unsupported shift operation")
 }
 
+// TODO: Use bits.Add
+// TODO: Unsigned operations obsolete (except for cpu)?
 func Alu(op uint32, va uint32, vb uint32) uint64 {
 	switch op {
 	case OpADD:

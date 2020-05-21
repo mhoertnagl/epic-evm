@@ -137,14 +137,14 @@ CPU STATE REGISTER - CSR
 --------------------------------------------------------------------------------
 
 The CPU STATE REGISTER contains the state of the CPU.
-  The COND bits 28-26 reflect the last result of a testing function or an
-operation with the SET flag enabled.
+  The COND bits 28-25 (C, N, Z, V) reflect the last result of a testing function
+or an operation with the SET flag enabled.
   The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
 to various privileges or restrictions.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      |           | COND      |
+      |           | C   N   Z   V |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -177,21 +177,39 @@ Every EPIC instruction contains a three bit condition block. Whether an
 instruction will be executed will be determined by this condition block and the
 corresponding condition block of the CPU STATE REGISTER.
 
-      D <- sign(REG[RA]) - sign(REG[RB])
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      |           | C   N   Z   V |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      EQ <- D == 0
-      LT <- D[32] == 1
-      GT <- ~EQ & ~LT
+The following table lists the meanings for each bit:
+
+       Bit | Meaning
+      -----+-----------------------------------------------------------
+        C  | The CARRY bit is set whenever the result is too large to
+           | fit in the 32 bit result register.
+      -----+-----------------------------------------------------------
+        N  | The NEGATIVE bit is set whenever the most significant bit
+           | of the 32 bit result is 1.
+      -----+-----------------------------------------------------------
+        Z  | The ZERO bit is set whenever the result is equal to 0.
+      -----+-----------------------------------------------------------
+        V  | The OVERFLOW bit is set whenever the result overflowed.
+
+To define the operational semantics, let RES be the 33 bit result of any
+instruction where bit 33 is the carry bit. EPIC will then compute the condition
+flags in the CSR as:
 
       def set_cond(rs)
-        CSR[26] = rs == 0
-        CSR[27] = rs[32] == 1
-        CSR[28] = ~(CSR[27] | CSR[26])
+        C = RES[32]
+        N = RES[31]
+        Z = RES[31:0] == 0
+        V = RES[32] xor RES[31]
 
-      C = CSR[28] & INSTR[28]
-        | CSR[27] & INSTR[27]
-        | CSR[26] & INSTR[26]
-        | INSTR[28] & INSTR[27] & INSTR[26]
+References
+--------------------------------------------------------------------------------
+http://teaching.idallen.com/dat2343/10f/notes/040_overflow.txt
+http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473h/CEGBHJCJ.html
 
 
 ================================================================================
@@ -200,7 +218,9 @@ corresponding condition block of the CPU STATE REGISTER.
 
 The following conditions can be attached to any instruction:
 
-       COND  | Mnemonic |
+// TODO: nv still true?
+
+       COND  | Mnemonic | Meaning
       -------+----------+------------------------------------------------
        0 0 0 | nv       | Never execute the instruction. However, set CSR
              |          | condition flags if SET bit of the instruction
@@ -232,6 +252,10 @@ leveraging some of the instructions:
           brane @Math.gcd
           ret
 
+      C = CSR[28] & INSTR[28]
+        | CSR[27] & INSTR[27]
+        | CSR[26] & INSTR[26]
+        | INSTR[28] & INSTR[27] & INSTR[26]
 
 
           | nv | eq | lt | le | gt | ge | ne | al |
@@ -295,10 +319,11 @@ register RD. If bit S is 1, evaluates the condition flags for the result.
       | RB            | 0 | SOP   | SHAMT              | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      rs      = sign(REG[RA]) + shift(sign(REG[RB]), SOP, SHAMT)
-      REG[RD] = rs[31:0]
-      if S == 1
-        set_cond(rs)
+      if cond_passed(COND)
+        rs      = sign(REG[RA]) + shift(sign(REG[RB]), SOP, SHAMT)
+        REG[RD] = rs[31:0]
+        if S == 1
+          set_cond(rs)
 
 Note that bit 11 is reserved for future enhancements and is expected to be zero
 to guarantee compatibility with upcoming ISA releases.
@@ -319,10 +344,11 @@ the condition flags for the result.
       | IMM12                                          | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      rs      = sign(REG[RA]) + sign(IMM12)
-      REG[RD] = rs[31:0]
-      if S == 1
-        set_cond(rs)
+      if cond_passed(COND)
+        rs      = sign(REG[RA]) + sign(IMM12)
+        REG[RD] = rs[31:0]
+        if S == 1
+          set_cond(rs)
 
 
 Adds the sign extended 16 bit immediate value IMM16 to the signed integer in
@@ -340,10 +366,11 @@ evaluates the condition flags for the result.
                                                        | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      rs      = sign(REG[RA]) + sign(IMM16)
-      REG[RD] = rs[31:0]
-      if S == 1
-        set_cond(rs)
+      if cond_passed(COND)
+        rs      = sign(REG[RA]) + sign(IMM16)
+        REG[RD] = rs[31:0]
+        if S == 1
+          set_cond(rs)
 
 
 Adds the sign extended 16 bit immediate value IMM16 shifted to the left by 16
@@ -361,10 +388,11 @@ again. If bit S is 1, evaluates the condition flags for the result.
                                                        | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      rs      = sign(REG[RA]) + sign(IMM16 << 16)
-      REG[RD] = rs[31:0]
-      if S == 1
-        set_cond(rs)
+      if cond_passed(COND)
+        rs      = sign(REG[RA]) + sign(IMM16 << 16)
+        REG[RD] = rs[31:0]
+        if S == 1
+          set_cond(rs)
 
 
 ================================================================================
@@ -391,10 +419,11 @@ again. If bit S is 1, evaluates the condition flags for the result.
       | RB            | 0 | SOP   | SHAMT              | 0   0   0 | 0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      adr      = zero(REG[RA]) + shift(sign(REG[RB]), SOP, SHAMT)
-      MEM[adr] = REG[RD]
-      if S == 1
-        set_cond(sign(REG[RD]))
+      if cond_passed(COND)
+        adr      = zero(REG[RA]) + shift(sign(REG[RB]), SOP, SHAMT)
+        MEM[adr] = REG[RD]
+        if S == 1
+          set_cond(sign(REG[RD]))
 
 
 // TODO: Description.
@@ -410,10 +439,11 @@ again. If bit S is 1, evaluates the condition flags for the result.
       | IMM12                                          | 0   0   0 | 0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
-      adr     = zero(REG[RA]) + sign(IMM12)
-      REG[RD] = MEM[adr]
-      if S == 1
-        set_cond(sign(REG[RD]))
+      if cond_passed(COND)
+        adr     = zero(REG[RA]) + sign(IMM12)
+        REG[RD] = MEM[adr]
+        if S == 1
+          set_cond(sign(REG[RD]))
 
 Note, that bits 3-1 are reserved for future enhancements and are expected to be
 all zeros to guarantee compatibility with upcoming ISA releases.

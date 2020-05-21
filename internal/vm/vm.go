@@ -18,7 +18,7 @@ func NewVM(mem []byte) *VM {
 func (m *VM) Run() {
 	for {
 		ins := m.ins(m.mem)
-		if m.condTrue(ins) {
+		if m.condPassed(ins) {
 			switch op(ins) {
 			case OpDPR:
 				m.execDPR(ins)
@@ -116,7 +116,7 @@ func (m *VM) alu(ins uint32, va uint32, vb uint32) {
 	}
 }
 
-func (m *VM) condTrue(ins uint32) bool {
+func (m *VM) condPassed(ins uint32) bool {
 	gt := Bit(m.csr, 28) & Bit(ins, 28)
 	lt := Bit(m.csr, 27) & Bit(ins, 27)
 	eq := Bit(m.csr, 26) & Bit(ins, 26)
