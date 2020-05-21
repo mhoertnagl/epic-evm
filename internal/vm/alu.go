@@ -26,23 +26,8 @@ func ShouldSetCond(ins uint32) bool {
 		return true
 	case OpCPU:
 		return true
-	case OpTST:
-		return true
 	default:
-		return isSetCond(ins)
-	}
-}
-
-func ShouldWriteBack(ins uint32) bool {
-	switch aluop(ins) {
-	case OpCMP:
 		return false
-	case OpCPU:
-		return false
-	case OpTST:
-		return false
-	default:
-		return true
 	}
 }
 
@@ -60,42 +45,40 @@ func Shift(vb uint32, op SOp, shamt uint32) uint32 {
 	panic("unsupported shift operation")
 }
 
-// TODO: Use bits.Add
-// TODO: Unsigned operations obsolete (except for cpu)?
-func Alu(op uint32, va uint32, vb uint32) uint64 {
+func Alu(op uint32, va uint32, vb uint32) (uint32, uint32) {
 	switch op {
 	case OpADD:
-		return uint64(int64(Sext64(va)) + int64(Sext64(vb)))
+		return bits.Add32(va, vb, 0)
 	case OpSUB:
-		return uint64(int64(Sext64(va)) - int64(Sext64(vb)))
+		return bits.Sub32(va, vb, 0)
 	case OpMUL:
-		return uint64(int64(Sext64(va)) * int64(Sext64(vb)))
+		return bits.Mul32(va, vb)
 	case OpDIV:
-		return uint64(int64(Sext64(va)) / int64(Sext64(vb)))
+		return bits.Div32(0, va, vb)
 	case OpAND:
-		return uint64(va & vb)
+		return va & vb, 0
 	case OpOOR:
-		return uint64(va | vb)
+		return va | vb, 0
 	case OpXOR:
-		return uint64(va ^ vb)
+		return va ^ vb, 0
 	case OpNOR:
-		return uint64(^(va | vb))
-	case OpADU:
-		return uint64(va) + uint64(vb)
-	case OpSBU:
-		return uint64(va) - uint64(vb)
-	case OpMLU:
-		return uint64(va) * uint64(vb)
-	case OpDVU:
-		return uint64(va) / uint64(vb)
+		return ^(va | vb), 0
+	case OpXX8:
+		panic("unsupported alu operation")
+	case OpXX9:
+		panic("unsupported alu operation")
+	case OpXXA:
+		panic("unsupported alu operation")
+	case OpXXB:
+		panic("unsupported alu operation")
 	case OpCMP:
-		return uint64(int64(Sext64(va)) - int64(Sext64(vb)))
+		return bits.Sub32(va, vb, 0)
 	case OpCPU:
-		return uint64(va) - uint64(vb)
-	case OpTST:
-		return uint64(va & vb)
+		return bits.Sub32(va, vb, 0)
+	case OpXXE:
+		panic("unsupported alu operation")
 	case OpMOV:
-		return uint64(vb)
+		return vb, 0
 	}
 	panic("unsupported alu operation")
 }

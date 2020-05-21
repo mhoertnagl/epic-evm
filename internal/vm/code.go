@@ -4,13 +4,22 @@ type Op = uint32
 
 const (
 	OpDPR Op = 0x0
-	OpIMM    = 0x1
-	OpMEM    = 0x2
+	OpMEM    = 0x1
+	OpNA2    = 0x2
 	OpNA3    = 0x3
 	OpNA4    = 0x4
 	OpNA5    = 0x5
 	OpNA6    = 0x6
 	OpBRA    = 0x7
+)
+
+type IOp = uint32
+
+const (
+	OpREG IOp = 0x0
+	OpI12     = 0x1
+	OpL16     = 0x2
+	OpU16     = 0x3
 )
 
 type AOp = uint32
@@ -24,13 +33,13 @@ const (
 	OpOOR     = 0x5
 	OpXOR     = 0x6
 	OpNOR     = 0x7
-	OpADU     = 0x8
-	OpSBU     = 0x9
-	OpMLU     = 0xA
-	OpDVU     = 0xB
+	OpXX8     = 0x8
+	OpXX9     = 0x9
+	OpXXA     = 0xA
+	OpXXB     = 0xB
 	OpCMP     = 0xC
 	OpCPU     = 0xD
-	OpTST     = 0xE
+	OpXXE     = 0xE
 	OpMOV     = 0xF
 )
 
@@ -44,6 +53,7 @@ const (
 )
 
 const (
+	RP uint32 = 0xE
 	IP uint32 = 0xF
 )
 
@@ -51,6 +61,10 @@ type Ins = uint32
 
 func op(ins uint32) Op {
 	return bitsAt(ins, 3, 28)
+}
+
+func iop(ins uint32) Op {
+	return bitsAt(ins, 2, 24)
 }
 
 func aluop(ins uint32) AOp {
@@ -85,20 +99,16 @@ func imm16(ins uint32) uint32 {
 	return bitsAt(ins, 16, 4)
 }
 
-func isImm12(ins uint32) bool {
-	return bitSet(ins, 24)
-}
-
-func isSll16(ins uint32) bool {
-	return bitSet(ins, 24)
-}
-
-func isSetCond(ins uint32) bool {
-	return bitSet(ins, 25)
+func imm25(ins uint32) uint32 {
+	return bitsAt(ins, 25, 0)
 }
 
 func isLoad(ins uint32) bool {
 	return bitSet(ins, 0)
+}
+
+func isLink(ins uint32) bool {
+	return bitSet(ins, 25)
 }
 
 func bitsAt(val uint32, p uint8, s uint8) uint32 {

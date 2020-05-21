@@ -23,15 +23,15 @@ func (m *VM) Run() {
 			case OpDPR:
 				m.execDPR(ins)
 				if doesNotWriteIP(ins) {
-					m.regs[IP] += 4
-				}
-			case OpIMM:
-				m.execIMM(ins)
-				if doesNotWriteIP(ins) {
-					m.regs[IP] += 4
+					m.regs[IP]++
 				}
 			case OpMEM:
-				m.regs[IP] += 4
+				m.execMEM(ins)
+				if doesNotWriteIP(ins) {
+					m.regs[IP]++
+				}
+			case OpNA2:
+				panic("unsopported NA2 operation")
 			case OpNA3:
 				panic("unsopported NA3 operation")
 			case OpNA4:
@@ -41,105 +41,101 @@ func (m *VM) Run() {
 			case OpNA6:
 				panic("unsopported NA6 operation")
 			case OpBRA:
+				m.execBRA(ins)
 			}
 		} else {
-			m.regs[IP] += 4
+			m.regs[IP]++
 		}
 	}
 }
 
 func (m *VM) execDPR(ins uint32) {
+	rd := rd(ins)
 	ra := ra(ins)
-	va := m.regs[ra]
-	var vb uint32
-	if isImm12(ins) {
-		vb = imm12(ins)
-		if ShoudSignExtend(ins) {
-			vb = Sext(vb, 12)
-		}
-	} else {
-		vb = m.regs[rb(ins)]
-		vb = Shift(vb, sop(ins), shamt(ins))
-	}
-	m.alu(ins, va, vb)
-}
+	aop := aluop(ins)
 
-func (m *VM) execIMM(ins uint32) {
-	ra := ra(ins)
 	va := m.regs[ra]
-	vb := imm16(ins)
-	if ShoudSignExtend(ins) {
-		vb = Sext(vb, 16)
+	vb := m.computeVB(ins)
+	rs, c := Alu(aop, va, vb)
+
+	switch aop {
+	case OpCMP:
+		m.setEqualFlag(rs == 0)
+		m.setLessFlag(Bit(rs, 31) == 1)
+	case OpCPU:
+		m.setEqualFlag(rs == 0)
+		m.setLessFlag(c == 0)
+	default:
+		m.regs[rd] = uint32(rs)
 	}
-	if isSll16(ins) {
-		vb = vb << 16
-	}
-	m.alu(ins, va, vb)
 }
 
 func (m *VM) execMEM(ins uint32) {
 	rd := rd(ins)
 	ra := ra(ins)
-	va := m.regs[ra]
-	var vb uint32
-	if isImm12(ins) {
-		vb = imm12(ins)
-		vb = Sext(vb, 12)
-	} else {
-		vb = m.regs[rb(ins)]
-		vb = Shift(vb, sop(ins), shamt(ins))
-	}
-	// a := uint32(int64(uint64(va)) + int64(Sext64(vb)))
-	a := uint32(int64(va) + int64(Sext64(vb)))
-	if isLoad(ins) {
-		m.regs[rd] = read32(m.mem, a)
-	} else {
-		write32(m.mem, a, m.regs[rd])
-	}
 
-	// Sign extend the value in register RD and set condition flags accordingly.
-	if ShouldSetCond(ins) {
-		m.setCond(Sext64(m.regs[rd]))
+	va := m.regs[ra]
+	vb := m.computeVB(ins)
+	adr, _ := Alu(OpADD, va, vb)
+	// Memory access is word aligned only.
+	adr <<= 2
+
+	if isLoad(ins) {
+		m.regs[rd] = read32(m.mem, adr)
+	} else {
+		write32(m.mem, adr, m.regs[rd])
 	}
 }
 
-func (m *VM) alu(ins uint32, va uint32, vb uint32) {
-	rd := rd(ins)
-	rs := Alu(aluop(ins), va, vb)
-
-	if ShouldWriteBack(ins) {
-		m.regs[rd] = uint32(rs)
+func (m *VM) execBRA(ins uint32) {
+	if isLink(ins) {
+		m.regs[RP] = m.regs[IP] + 1
 	}
+	m.regs[IP] += Sext(imm25(ins), 25)
+}
 
-	if ShouldSetCond(ins) {
-		m.setCond(rs)
+func (m *VM) computeVB(ins uint32) uint32 {
+	switch iop(ins) {
+	case OpREG:
+		return Shift(m.regs[rb(ins)], sop(ins), shamt(ins))
+	case OpI12:
+		return Sext(imm12(ins), 12)
+	case OpL16:
+		return Sext(imm16(ins), 16)
+	case OpU16:
+		return Shift(imm16(ins), OpSLL, 16)
 	}
+	panic("unsopported RB operation")
 }
 
 func (m *VM) condPassed(ins uint32) bool {
-	gt := Bit(m.csr, 28) & Bit(ins, 28)
-	lt := Bit(m.csr, 27) & Bit(ins, 27)
-	eq := Bit(m.csr, 26) & Bit(ins, 26)
-	al := Bit(ins, 28) & Bit(ins, 27) & Bit(ins, 26)
-	return (gt | lt | eq | al) == 1
+	csrE := Bit(m.csr, 26)
+	csrL := Bit(m.csr, 27)
+	csrG := ^csrL & ^csrE
+
+	insE := Bit(ins, 26)
+	insL := Bit(ins, 27)
+	insG := Bit(ins, 28)
+
+	return (csrG&insG | csrL&insL | csrE&insE | insG&insL&insE) == 1
 }
 
-func (m *VM) setCond(rs uint64) {
-	eq := rs == 0
-	lt := Bit64(rs, 32) == 1
-	gt := !eq && !lt
-
+func (m *VM) setEqualFlag(eq bool) {
 	m.csr = SetBool(m.csr, 26, eq)
+}
+
+func (m *VM) setLessFlag(lt bool) {
 	m.csr = SetBool(m.csr, 27, lt)
-	m.csr = SetBool(m.csr, 28, gt)
 }
 
 func (m *VM) ins(code []byte) uint32 {
-	return read32(code, m.regs[IP])
+	// Instructions access is word aligned only.
+	return read32(code, m.regs[IP]<<2)
 }
 
 func doesNotWriteIP(ins uint32) bool {
-	return (ShouldWriteBack(ins) && rd(ins) == IP) == false
+	aop := aluop(ins)
+	return aop == OpCMP || aop == OpCPU || rd(ins) != IP
 }
 
 func read32(data []byte, a uint32) uint32 {
