@@ -60,7 +60,7 @@ const (
 type Ins = uint32
 
 func op(ins uint32) Op {
-	return bitsAt(ins, 3, 28)
+	return bitsAt(ins, 3, 29)
 }
 
 func iop(ins uint32) Op {

@@ -2,6 +2,7 @@ package vm
 
 import (
 	"encoding/binary"
+	"fmt"
 )
 
 type VM struct {
@@ -16,7 +17,9 @@ func NewVM(mem []byte) *VM {
 }
 
 func (m *VM) Run() {
-	for {
+	len := uint32(len(m.mem) >> 2)
+	fmt.Printf("Code length: %d\n", len)
+	for m.regs[IP] < len {
 		ins := m.ins(m.mem)
 		if m.condPassed(ins) {
 			switch op(ins) {
@@ -49,6 +52,50 @@ func (m *VM) Run() {
 	}
 }
 
+func (m *VM) Reg(id string) uint32 {
+	switch id {
+	case "r0":
+		return m.regs[0]
+	case "r1":
+		return m.regs[1]
+	case "r2":
+		return m.regs[2]
+	case "r3":
+		return m.regs[3]
+	case "r4":
+		return m.regs[4]
+	case "r5":
+		return m.regs[5]
+	case "r6":
+		return m.regs[6]
+	case "r7":
+		return m.regs[7]
+	case "r8":
+		return m.regs[8]
+	case "r9":
+		return m.regs[9]
+	case "r10":
+		return m.regs[10]
+	case "r11":
+		return m.regs[11]
+	case "r12":
+		return m.regs[12]
+	case "r13":
+		return m.regs[13]
+	case "r14":
+		return m.regs[14]
+	case "r15":
+		return m.regs[15]
+	case "sp":
+		return m.regs[13]
+	case "rp":
+		return m.regs[14]
+	case "ip":
+		return m.regs[15]
+	}
+	panic("undefined register id")
+}
+
 func (m *VM) execDPR(ins uint32) {
 	rd := rd(ins)
 	ra := ra(ins)
@@ -77,8 +124,6 @@ func (m *VM) execMEM(ins uint32) {
 	va := m.regs[ra]
 	vb := m.computeVB(ins)
 	adr, _ := Alu(OpADD, va, vb)
-	// Memory access is word aligned only.
-	adr <<= 2
 
 	if isLoad(ins) {
 		m.regs[rd] = read32(m.mem, adr)
@@ -130,7 +175,7 @@ func (m *VM) setLessFlag(lt bool) {
 
 func (m *VM) ins(code []byte) uint32 {
 	// Instructions access is word aligned only.
-	return read32(code, m.regs[IP]<<2)
+	return read32(code, m.regs[IP])
 }
 
 func doesNotWriteIP(ins uint32) bool {
@@ -139,9 +184,11 @@ func doesNotWriteIP(ins uint32) bool {
 }
 
 func read32(data []byte, a uint32) uint32 {
+	a = a << 2
 	return binary.BigEndian.Uint32(data[a : a+4])
 }
 
 func write32(data []byte, a uint32, v uint32) {
+	a = a << 2
 	binary.BigEndian.PutUint32(data[a:a+4], v)
 }
