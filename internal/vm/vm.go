@@ -4,6 +4,9 @@ import (
 	"encoding/binary"
 )
 
+// TODO: Do I need a mvs - move signed
+// TODO: Cannot move 32 bit value with two moves!!!
+
 type VM struct {
 	cir  uint32
 	csr  uint32

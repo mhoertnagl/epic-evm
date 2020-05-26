@@ -35,6 +35,7 @@ r0 = 00004000
 r1 = 00000400
 
 // TODO: Do I need a mvs - move signed
+// TODO: Cannot move 32 bit value with two moves!!!
 // mov r0 0x8000
 // mov r1 r0 >> 4
 ===
