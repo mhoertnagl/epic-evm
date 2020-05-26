@@ -243,8 +243,6 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0473h/CEGBHJCJ.ht
 
 The following conditions can be attached to any instruction:
 
-// TODO: nv still true?
-
        COND  | Mnemonic | Meaning
       -------+----------+------------------------------------------------
        0 0 0 | nv       | Never execute the instruction.

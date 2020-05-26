@@ -3,6 +3,7 @@ package vm_test
 import (
 	"encoding/binary"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -11,6 +12,7 @@ import (
 )
 
 func TestInstrctions(t *testing.T) {
+	tstFile(t, "../../test/add.tst")
 	tstFile(t, "../../test/mov.tst")
 }
 
@@ -23,6 +25,10 @@ func tstFile(t *testing.T, path string) {
 	}
 
 	str := string(bin)
+
+	var re = regexp.MustCompile(`//[^\n]*`)
+	str = re.ReplaceAllString(str, ``)
+
 	tests := strings.Split(str, "===")
 
 	for i, test := range tests {

@@ -2,7 +2,6 @@ package vm
 
 import (
 	"encoding/binary"
-	"fmt"
 )
 
 type VM struct {
@@ -18,7 +17,7 @@ func NewVM(mem []byte) *VM {
 
 func (m *VM) Run() {
 	len := uint32(len(m.mem) >> 2)
-	fmt.Printf("Code length: %d\n", len)
+	// fmt.Printf("Code length: %d\n", len)
 	for m.regs[IP] < len {
 		ins := m.ins(m.mem)
 		if m.condPassed(ins) {
@@ -144,13 +143,15 @@ func (m *VM) computeVB(ins uint32) uint32 {
 	case OpREG:
 		return Shift(m.regs[rb(ins)], sop(ins), shamt(ins))
 	case OpI12:
+		// TODO: Do not sign extend?
 		return Sext(imm12(ins), 12)
 	case OpL16:
+		// TODO: Do not sign extend?
 		return Sext(imm16(ins), 16)
 	case OpU16:
 		return Shift(imm16(ins), OpSLL, 16)
 	}
-	panic("unsopported RB operation")
+	panic("unsupported RB operation")
 }
 
 func (m *VM) condPassed(ins uint32) bool {

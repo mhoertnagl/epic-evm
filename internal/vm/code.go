@@ -84,7 +84,7 @@ func rb(ins uint32) uint32 {
 }
 
 func sop(ins uint32) SOp {
-	return bitsAt(ins, 2, 8)
+	return bitsAt(ins, 2, 9)
 }
 
 func shamt(ins uint32) SOp {
