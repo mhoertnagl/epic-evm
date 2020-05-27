@@ -19,7 +19,17 @@ const (
 	OpREG IOp = 0x0
 	OpI12     = 0x1
 	OpL16     = 0x2
-	OpU16     = 0x3
+	OpH16     = 0x3
+)
+
+const (
+	VbREG  = 0x0
+	VbS12  = 0x1
+	VbU12  = 0x2
+	VbSL16 = 0x3
+	VbUL16 = 0x4
+	VbH16  = 0x5
+	VbS25  = 0x6
 )
 
 type AOp = uint32
@@ -57,7 +67,17 @@ const (
 	IP uint32 = 0xF
 )
 
-type Ins = uint32
+const (
+	CndNone     = 0x0
+	CndSigned   = 0x1
+	CndUnsigned = 0x2
+)
+
+const (
+	CmbRegReg = 0x0
+	CmbRegImm = 0x1
+	CmbImmReg = 0x2
+)
 
 func op(ins uint32) Op {
 	return bitsAt(ins, 3, 29)

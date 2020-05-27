@@ -34,7 +34,7 @@ func tstFile(t *testing.T, path string) {
 	for i, test := range tests {
 		test = strings.TrimSpace(test)
 		if test != "" {
-			tstFileTest(t, path, i+1, test)
+			tstFileTest(t, path, i, test)
 		}
 	}
 }
@@ -59,7 +59,7 @@ func tstFileTest(t *testing.T, path string, i int, test string) {
 		a := m.Reg(reg)
 		e := hexStrToUint32(t, val)
 		if e != a {
-			t.Errorf("\nFile: %s\nTest: %d\n\tExpected [%x] but got [%x].", path, i, e, a)
+			t.Errorf("\nFile: %s\nTest: %d\n\tExpected [%s] to be [%x] but is [%x].", path, i, reg, e, a)
 		}
 	}
 }
@@ -94,41 +94,3 @@ func hexStrToUint32(t *testing.T, v string) uint32 {
 	}
 	return uint32(n)
 }
-
-// func TestShiftSLL(t *testing.T) {
-// 	testShiftOps(t, 0x00000000, 0x00000000, vm.OpSLL, 0)
-// 	testShiftOps(t, 0x00000002, 0x00000001, vm.OpSLL, 1)
-// 	testShiftOps(t, 0x80000000, 0x00000001, vm.OpSLL, 31)
-// 	testShiftOps(t, 0x00001010, 0x00000101, vm.OpSLL, 4)
-// }
-
-// func TestShiftROL(t *testing.T) {
-// 	testShiftOps(t, 0x00000000, 0x00000000, vm.OpROL, 0)
-// 	testShiftOps(t, 0x00000001, 0x80000000, vm.OpROL, 1)
-// 	testShiftOps(t, 0x80000001, 0xC0000000, vm.OpROL, 1)
-// }
-
-// func TestShiftSRL(t *testing.T) {
-// 	testShiftOps(t, 0x00000000, 0x00000000, vm.OpSRL, 0)
-// 	testShiftOps(t, 0x00000001, 0x00000002, vm.OpSRL, 1)
-// 	testShiftOps(t, 0x40000000, 0x80000000, vm.OpSRL, 1)
-// 	testShiftOps(t, 0x00000001, 0x80000000, vm.OpSRL, 31)
-// 	testShiftOps(t, 0x01010000, 0x10100000, vm.OpSRL, 4)
-// }
-
-// func TestShiftSRA(t *testing.T) {
-// 	testShiftOps(t, 0x00000000, 0x00000000, vm.OpSRA, 0)
-// 	testShiftOps(t, 0x00000001, 0x00000002, vm.OpSRA, 1)
-// 	testShiftOps(t, 0x38000000, 0x70000000, vm.OpSRA, 1)
-// 	testShiftOps(t, 0xC0000000, 0x80000000, vm.OpSRA, 1)
-// 	testShiftOps(t, 0xFFFFFFFF, 0x80000000, vm.OpSRA, 31)
-// }
-
-// func TestAluADD(t *testing.T) {
-// 	testAluOps(t, 0x0000000000000002, vm.OpADD, 0x00000001, 0x00000001)
-// 	testAluOps(t, 0x0000000000000000, vm.OpADD, 0x00000001, 0xFFFFFFFF)
-// 	testAluOps(t, 0xFFFFFFFFFE000002, vm.OpADD, 0xFF000001, 0xFF000001)
-// 	testAluOps(t, 0x0000000000000000, vm.OpADD, 0xFFFFFFFF, 0x00000001)
-// 	testAluOps(t, 0xFFFFFFFFFFFFFFFE, vm.OpADD, 0xFFFFFFFF, 0xFFFFFFFF)
-// 	testAluOps(t, 0xFFFFFFFF00000000, vm.OpADD, 0x80000000, 0x80000000)
-// }
