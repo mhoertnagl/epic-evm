@@ -4,22 +4,13 @@ type Op = uint32
 
 const (
 	OpDPR Op = 0x0
-	OpMEM    = 0x1
-	OpNA2    = 0x2
-	OpNA3    = 0x3
-	OpNA4    = 0x4
+	OpD12    = 0x1
+	OpMEM    = 0x2
+	OpM12    = 0x3
+	OpI16    = 0x4
 	OpNA5    = 0x5
 	OpNA6    = 0x6
 	OpBRA    = 0x7
-)
-
-type IOp = uint32
-
-const (
-	OpREG IOp = 0x0
-	OpI12     = 0x1
-	OpL16     = 0x2
-	OpH16     = 0x3
 )
 
 const (
@@ -47,7 +38,7 @@ const (
 	OpXX9     = 0x9
 	OpXXA     = 0xA
 	OpXXB     = 0xB
-	OpCMP     = 0xC
+	OpCPS     = 0xC
 	OpCPU     = 0xD
 	OpXXE     = 0xE
 	OpMOV     = 0xF
@@ -63,8 +54,8 @@ const (
 )
 
 const (
-	RP uint32 = 0xE
-	IP uint32 = 0xF
+	RP uint32 = 0x1E
+	IP uint32 = 0x1F
 )
 
 const (
@@ -81,10 +72,6 @@ const (
 
 func op(ins uint32) Op {
 	return bitsAt(ins, 3, 29)
-}
-
-func iop(ins uint32) Op {
-	return bitsAt(ins, 2, 24)
 }
 
 func aluop(ins uint32) AOp {
@@ -125,6 +112,10 @@ func imm25(ins uint32) uint32 {
 
 func isLoad(ins uint32) bool {
 	return bitSet(ins, 0)
+}
+
+func isHigh(ins uint32) bool {
+	return bitSet(ins, 20)
 }
 
 func isLink(ins uint32) bool {
