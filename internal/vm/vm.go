@@ -5,31 +5,11 @@ import (
 	"math/bits"
 )
 
-// TODO: Do I need a mvs - move signed
-// TODO: Cannot move 32 bit value with two moves!!!
-
 type VM struct {
 	cir  uint32
 	csr  uint32
 	regs [32]uint32
 	mem  []byte
-
-	rd    uint32
-	ra    uint32
-	ma    bool
-	ld    bool
-	lnk   bool
-	aop   uint32
-	sc    bool
-	sn    bool
-	wb    bool
-	br    bool
-	inc   bool
-	va    uint32
-	vb    uint32
-	vd    uint32
-	sop   uint32
-	shamt uint32
 }
 
 func NewVM(mem []byte) *VM {
@@ -40,140 +20,141 @@ func (m *VM) Run() {
 	len := uint32(len(m.mem) >> 2)
 	for m.regs[IP] < len {
 		ins := m.ins(m.mem)
-		m.decode(ins)
-		m.execute()
+		if m.condPassed(ins) {
+			m.run(ins)
+		} else {
+			m.regs[IP]++
+		}
 	}
 }
 
-func (m *VM) decode(ins uint32) {
-	op := op(ins)
-	cp := m.condPassed(ins)
-
-	if op == OpBRA {
-		m.rd = IP
-		m.ra = IP
-	} else {
-		m.rd = rd(ins)
-		m.ra = ra(ins)
+func (m *VM) run(ins uint32) {
+	switch op(ins) {
+	case OpDPR:
+		m.runDPR(ins)
+	case OpD12:
+		m.runD12(ins)
+	case OpMEM:
+		m.runMEM(ins)
+	case OpM12:
+		m.runM12(ins)
+	case OpI16:
+		m.runD16(ins)
+	case OpBRA:
+		m.runBRA(ins)
 	}
+}
 
+func (m *VM) runDPR(ins uint32) {
+	rd := rd(ins)
+	ra := ra(ins)
+	rb := rb(ins)
+	sop := sop(ins)
+	shamt := shamt(ins)
 	aop := aluop(ins)
-	switch op {
-	case OpMEM:
-		m.aop = OpADD
-	case OpBRA:
-		m.aop = OpADD
-	default:
-		if aop == OpCPS || aop == OpCPU {
-			m.aop = OpSUB
-		} else {
-			m.aop = aop
-		}
-	}
 
-	if op == OpMEM || op == OpBRA {
-		m.sn = false
-	} else {
-		m.sn = aop == OpCPS
-	}
+	va := m.regs[ra]
+	vb := m.regs[rb]
+	vb = shift(vb, sop, shamt)
 
-	switch op {
-	case OpMEM:
-		m.sc = false
-		m.wb = cp && isLoad(ins)
-	case OpBRA:
-		m.sc = false
-		m.wb = false
-	default:
-		switch aop {
-		case OpCPS:
-			m.sc = cp
-			m.wb = false
-		case OpCPU:
-			m.sc = cp
-			m.wb = false
-		default:
-			m.sc = false
-			m.wb = cp
-		}
-	}
-
-	m.br = cp && (op == OpBRA || m.wb && m.rd == IP)
-
-	if op == OpDPR || op == OpMEM {
-		m.sop = sop(ins)
-		m.shamt = shamt(ins)
-	} else if op == OpI16 {
-		if isHigh(ins) {
-			m.shamt = 16
-		} else {
-			m.shamt = 0
-		}
-	} else {
-		m.sop = OpSLL
-		m.shamt = 0
-	}
-
-	m.va = m.regs[m.ra]
-
-	if op == OpDPR || op == OpMEM {
-		m.vb = m.regs[rb(ins)]
-	} else if op == OpD12 || op == OpM12 {
-		if m.sn {
-			m.vb = Sext(imm12(ins), 12)
-		} else {
-			m.vb = imm12(ins)
-		}
-	} else if op == OpI16 {
-		if m.sn {
-			m.vb = Sext(imm16(ins), 16)
-		} else {
-			m.vb = imm16(ins)
-		}
-	} else if op == OpBRA {
-		m.vb = Sext(imm25(ins), 25)
-	} else {
-		m.vb = 0
-	}
-
-	m.vd = m.regs[m.rd]
-
-	m.lnk = op == OpBRA && isLink(ins)
-	m.ma = op == OpMEM
-	m.ld = op == OpMEM && isLoad(ins)
+	m.writeRegs(rd, va, vb, aop)
 }
 
-func (m *VM) execute() {
+func (m *VM) runD12(ins uint32) {
+	rd := rd(ins)
+	ra := ra(ins)
+	aop := aluop(ins)
 
-	vb := shift(m.vb, m.sop, m.shamt)
-	rs, c := alu(m.aop, m.va, vb)
+	va := m.regs[ra]
+	vb := imm12(ins)
 
-	if m.ma {
-		if m.ld {
-			rs = read32(m.mem, rs)
-		} else {
-			write32(m.mem, rs, m.vd)
-		}
+	if isSignedAluOp(aop) {
+		vb = Sext(vb, 12)
 	}
 
-	if m.sc {
-		m.setEqualFlag(rs == 0)
-		if m.sn {
-			m.setLessFlag(Bit(rs, 31) == 1)
-		} else {
-			m.setLessFlag(c == 0)
-		}
+	m.writeRegs(rd, va, vb, aop)
+}
+
+func (m *VM) runMEM(ins uint32) {
+	rb := rb(ins)
+	sop := sop(ins)
+	shamt := shamt(ins)
+
+	vb := m.regs[rb]
+	vb = shift(vb, sop, shamt)
+
+	m.accessMem(ins, vb)
+}
+
+func (m *VM) runM12(ins uint32) {
+	vb := Sext(imm12(ins), 12)
+	m.accessMem(ins, vb)
+}
+
+func (m *VM) runD16(ins uint32) {
+	rd := rd(ins)
+	aop := aluop(ins)
+
+	va := m.regs[rd]
+	vb := imm16(ins)
+
+	if isSignedAluOp(aop) {
+		vb = Sext(vb, 16)
 	}
 
-	if m.lnk {
+	if isHigh(ins) {
+		vb = shift(vb, OpSLL, 16)
+	}
+
+	m.writeRegs(rd, va, vb, aop)
+}
+
+func (m *VM) runBRA(ins uint32) {
+	if isLink(ins) {
 		m.regs[RP] = m.regs[IP] + 1
 	}
 
-	if m.wb {
-		m.regs[m.rd] = rs
+	of := Sext(imm25(ins), 25)
+	ip, _ := bits.Add32(m.regs[IP], of, 0)
+	m.regs[IP] = ip
+}
+
+func (m *VM) writeRegs(rd uint32, va uint32, vb uint32, aop uint32) {
+	vr, c := alu(aop, va, vb)
+
+	switch aop {
+	case OpCPS:
+		m.setEqualFlag(vr == 0)
+		m.setLessFlag(Bit(vr, 31) == 1)
+		m.regs[IP]++
+	case OpCPU:
+		m.setEqualFlag(vr == 0)
+		m.setLessFlag(c == 0)
+		m.regs[IP]++
+	default:
+		m.regs[rd] = vr
+		if rd != IP {
+			m.regs[IP]++
+		}
+	}
+}
+
+func (m *VM) accessMem(ins uint32, vb uint32) {
+	rd := rd(ins)
+	ra := ra(ins)
+
+	vd := m.regs[rd]
+	va := m.regs[ra]
+
+	ad, _ := alu(OpADD, va, vb)
+
+	if isLoad(ins) {
+		m.regs[rd] = read32(m.mem, ad)
+	} else {
+		write32(m.mem, ad, vd)
 	}
 
-	if m.br == false {
+	if rd != IP {
 		m.regs[IP]++
 	}
 }
@@ -196,6 +177,10 @@ func alu(op uint32, va uint32, vb uint32) (uint32, uint32) {
 		return va ^ vb, 0
 	case OpNOR:
 		return ^(va | vb), 0
+	case OpCPS:
+		return bits.Sub32(va, vb, 0)
+	case OpCPU:
+		return bits.Sub32(va, vb, 0)
 	case OpMOV:
 		return vb, 0
 	}
@@ -226,6 +211,10 @@ func (m *VM) condPassed(ins uint32) bool {
 	insG := Bit(ins, 28)
 
 	return (csrG&insG | csrL&insL | csrE&insE | insG&insL&insE) == 1
+}
+
+func isSignedAluOp(aop uint32) bool {
+	return aop == OpMUL || aop == OpCPS
 }
 
 func (m *VM) setEqualFlag(eq bool) {

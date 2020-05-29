@@ -8,19 +8,9 @@ const (
 	OpMEM    = 0x2
 	OpM12    = 0x3
 	OpI16    = 0x4
-	OpNA5    = 0x5
-	OpNA6    = 0x6
-	OpBRA    = 0x7
-)
-
-const (
-	VbREG  = 0x0
-	VbS12  = 0x1
-	VbU12  = 0x2
-	VbSL16 = 0x3
-	VbUL16 = 0x4
-	VbH16  = 0x5
-	VbS25  = 0x6
+	// OpNA5    = 0x5
+	// OpNA6    = 0x6
+	OpBRA = 0x7
 )
 
 type AOp = uint32
@@ -34,14 +24,14 @@ const (
 	OpOOR     = 0x5
 	OpXOR     = 0x6
 	OpNOR     = 0x7
-	OpXX8     = 0x8
-	OpXX9     = 0x9
-	OpXXA     = 0xA
-	OpXXB     = 0xB
-	OpCPS     = 0xC
-	OpCPU     = 0xD
-	OpXXE     = 0xE
-	OpMOV     = 0xF
+	// OpXX8     = 0x8
+	// OpXX9     = 0x9
+	// OpXXA     = 0xA
+	// OpXXB     = 0xB
+	OpCPS = 0xC
+	OpCPU = 0xD
+	// OpXXE     = 0xE
+	OpMOV = 0xF
 )
 
 type SOp = uint32
@@ -58,18 +48,6 @@ const (
 	IP uint32 = 0x1F
 )
 
-const (
-	CndNone     = 0x0
-	CndSigned   = 0x1
-	CndUnsigned = 0x2
-)
-
-const (
-	CmbRegReg = 0x0
-	CmbRegImm = 0x1
-	CmbImmReg = 0x2
-)
-
 func op(ins uint32) Op {
 	return bitsAt(ins, 3, 29)
 }
@@ -79,15 +57,15 @@ func aluop(ins uint32) AOp {
 }
 
 func rd(ins uint32) uint32 {
-	return bitsAt(ins, 4, 20)
+	return bitsAt(ins, 5, 21)
 }
 
 func ra(ins uint32) uint32 {
-	return bitsAt(ins, 4, 16)
+	return bitsAt(ins, 5, 16)
 }
 
 func rb(ins uint32) uint32 {
-	return bitsAt(ins, 4, 12)
+	return bitsAt(ins, 5, 11)
 }
 
 func sop(ins uint32) SOp {

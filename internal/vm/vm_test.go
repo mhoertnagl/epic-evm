@@ -12,7 +12,8 @@ import (
 )
 
 func TestInstrctions(t *testing.T) {
-	// tstFile(t, "../../test/add.tst")
+	tstFile(t, "../../test/oor.tst")
+	tstFile(t, "../../test/add.tst")
 	// tstFile(t, "../../test/mov.tst")
 }
 
