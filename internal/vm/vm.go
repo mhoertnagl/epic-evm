@@ -64,13 +64,18 @@ func (m *VM) runD12(ins uint32) {
 	rd := rd(ins)
 	ra := ra(ins)
 	aop := aluop(ins)
+	// shamt := shamt(ins)
 
 	va := m.regs[ra]
 	vb := imm12(ins)
+	// vb := imm8(ins)
 
 	if isSignedAluOp(aop) {
 		vb = Sext(vb, 12)
+		// vb = Sext(imm8(ins), 8)
 	}
+
+	// vb = shift(vb, OpSLL, shamt&0x1E)
 
 	m.writeRegs(rd, va, vb, aop)
 }
@@ -88,6 +93,9 @@ func (m *VM) runMEM(ins uint32) {
 
 func (m *VM) runM12(ins uint32) {
 	vb := Sext(imm12(ins), 12)
+	// shamt := shamt(ins)
+	// vb := Sext(imm8(ins), 8)
+	// vb = shift(vb, OpSLL, shamt&0x1E)
 	m.accessMem(ins, vb)
 }
 

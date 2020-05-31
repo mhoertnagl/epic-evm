@@ -136,32 +136,15 @@ The routine is stored in the CPU bootstrap ROM.
 CPU STATE REGISTER - CSR
 --------------------------------------------------------------------------------
 
-// ---
 The CPU STATE REGISTER contains the state of the CPU.
-  The COND bits 28-26 (X, N, Z) reflect the last result of a testing function
-or an operation with the SET flag enabled.
-  The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
-to various privileges or restrictions.
+
+  o The COND bits 29-26 (V, C, L, E) reflect the last result of a comparison.
+  o The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
+    to various privileges or restrictions.
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      |           | X   N   Z |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                           | MODE      |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-// ---
-
-The CPU STATE REGISTER contains the state of the CPU.
-  The COND bits 28-26 (L, E) reflect the last result of a testing function
-or an operation with the SET flag enabled.
-  The MODE bits 2-0 define the current mode of the CPU. Each mode is connected
-to various privileges or restrictions.
-
-       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      |               | L | E |
+      |       | V | C | L | E |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -194,36 +177,20 @@ Every EPIC instruction contains a three bit condition block. Whether an
 instruction will be executed will be determined by this condition block and the
 corresponding condition block of the CPU STATE REGISTER.
 
-// ---
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      |           | X   N   Z |
+      |       | V | C | L | E |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
 The following table lists the meanings for each bit:
 
        Bit | Meaning
       -----+-----------------------------------------------------------
-        X  | Depending on which comparison operation is used the CARRY/
-           | OVERFLOW bit is set whenever the result
-           |  - is too large to fit (unsigned comparison)
-           |  - overflowed (signed comparison)
+        V  | The OVERFLOW bit is set whenever the signed comparison (CPS)
+           | yields REG[RA] < REG[RB].
       -----+-----------------------------------------------------------
-        N  | The NEGATIVE bit is set whenever the most significant bit
-           | of the 32 bit result is 1.
-      -----+-----------------------------------------------------------
-        Z  | The ZERO bit is set whenever the result is equal to 0.
-// ---
-
-
-       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      |               | L | E |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-
-The following table lists the meanings for each bit:
-
-       Bit | Meaning
+        C  | The CARRY bit is set whenverver the unsigned comparison (CPU)
+           | yields REG[RA] < REG[RB].
       -----+-----------------------------------------------------------
         L  | The LESS bit is set whenever the last comparison operation
            | gave a result where REG[RA] < REG[RB]
@@ -291,7 +258,7 @@ where G = ~L & ~E.
 
 If an instruction should be executed will then be determined by
 
-      C = G & INSTR[28]
+      X = G & INSTR[28]
         | L & INSTR[27]
         | E & INSTR[26]
         | INSTR[28] & INSTR[27] & INSTR[26]
@@ -324,9 +291,6 @@ If an instruction should be executed will then be determined by
        0 0 | sll (<<)                    1 0 | srl (>>)
       -----+--------------------------  -----+--------------------------
        0 1 | rol (<<>)                   1 1 | sra (>>>)
-
-      // TODO: Unbenutzt
-      // - Bits 4-0 = 1111, Bits 23-20 != 0000
 
 
 signed: mul, cps
@@ -385,21 +349,11 @@ IMM12, then stores the result in register RD.
 
        15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | SHAMT | IMM10                                  | 0   0   0   0 |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-
-      if cond_passed(COND)
-        REG[RD] = REG[RA] + (zero(IMM10) << SHAMT . 000)
-
-       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
       | SHAMT         | IMM8                           | 0   0   0   0 |
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       if cond_passed(COND)
         REG[RD] = REG[RA] + (zero(IMM8) << SHAMT . 0)
-
-
 
 
 Adds the sign extended 16 bit immediate value IMM16 to the value in register RD,
@@ -508,8 +462,8 @@ or rotated beforehand.
       if cond_passed(COND)
         REG[RD] = shift(REG[RB], SOP, SHAMT)
 
-Note that bits 16-19 and bit 11 are reserved for future enhancements and are
-expected to be zero to guarantee compatibility with upcoming ISA releases.
+Note that bits 16-20 are reserved for future enhancements and are expected to be
+zero to guarantee compatibility with upcoming ISA releases.
 
 
 Moves the sign extended 12 bit immediate value IMM12 into register RD.
@@ -527,6 +481,9 @@ Moves the sign extended 12 bit immediate value IMM12 into register RD.
 
       if cond_passed(COND)
         REG[RD] = sign(IMM12)
+
+Note that bits 16-20 are reserved for future enhancements and are expected to be
+zero to guarantee compatibility with upcoming ISA releases.
 
 
 Moves the 16 bit immediate value IMM16 into the lower halfword of register RD.
@@ -638,51 +595,6 @@ registers.
 --------------------------------------------------------------------------------
  LDS - Load Special
 --------------------------------------------------------------------------------
-
-// TODO: Like LDS.
-
-
---------------------------------------------------------------------------------
- -
---------------------------------------------------------------------------------
-
-       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 0   0   1 | COND      |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                                       |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-
-
---------------------------------------------------------------------------------
- -
---------------------------------------------------------------------------------
-
-       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 0   1   1 | COND      |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                                       |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-
-
---------------------------------------------------------------------------------
- -
---------------------------------------------------------------------------------
-
-       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-      | 1   0   0 | COND      | IMM26
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-                                                                       |
-      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
-
 
 --------------------------------------------------------------------------------
  -
