@@ -32,12 +32,12 @@ func (m *VM) run(ins uint32) {
 	switch op(ins) {
 	case OpDPR:
 		m.runDPR(ins)
-	case OpD12:
-		m.runD12(ins)
+	case OpDI8:
+		m.runDI8(ins)
 	case OpMEM:
 		m.runMEM(ins)
-	case OpM12:
-		m.runM12(ins)
+	case OpMI8:
+		m.runMI8(ins)
 	case OpI16:
 		m.runD16(ins)
 	case OpBRA:
@@ -60,22 +60,20 @@ func (m *VM) runDPR(ins uint32) {
 	m.writeRegs(rd, va, vb, aop)
 }
 
-func (m *VM) runD12(ins uint32) {
+func (m *VM) runDI8(ins uint32) {
 	rd := rd(ins)
 	ra := ra(ins)
 	aop := aluop(ins)
-	// shamt := shamt(ins)
+	shamt := shamt(ins)
 
 	va := m.regs[ra]
-	vb := imm12(ins)
-	// vb := imm8(ins)
+	vb := imm8(ins)
 
 	if isSignedAluOp(aop) {
-		vb = Sext(vb, 12)
-		// vb = Sext(imm8(ins), 8)
+		vb = Sext(imm8(ins), 8)
 	}
 
-	// vb = shift(vb, OpSLL, shamt&0x1E)
+	vb = shift(vb, OpROL, shamt&0x1E)
 
 	m.writeRegs(rd, va, vb, aop)
 }
@@ -91,11 +89,10 @@ func (m *VM) runMEM(ins uint32) {
 	m.accessMem(ins, vb)
 }
 
-func (m *VM) runM12(ins uint32) {
-	vb := Sext(imm12(ins), 12)
-	// shamt := shamt(ins)
-	// vb := Sext(imm8(ins), 8)
-	// vb = shift(vb, OpSLL, shamt&0x1E)
+func (m *VM) runMI8(ins uint32) {
+	shamt := shamt(ins)
+	vb := Sext(imm8(ins), 8)
+	vb = shift(vb, OpROL, shamt&0x1E)
 	m.accessMem(ins, vb)
 }
 

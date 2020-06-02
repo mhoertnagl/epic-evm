@@ -12,9 +12,10 @@ import (
 )
 
 func TestInstrctions(t *testing.T) {
-	tstFile(t, "../../test/oor.tst")
 	tstFile(t, "../../test/add.tst")
-	// tstFile(t, "../../test/mov.tst")
+	tstFile(t, "../../test/sub.tst")
+	tstFile(t, "../../test/oor.tst")
+	tstFile(t, "../../test/mov.tst")
 }
 
 func tstFile(t *testing.T, path string) {
@@ -44,9 +45,9 @@ func tstFileTest(t *testing.T, path string, i int, test string) {
 	t.Helper()
 
 	parts := strings.Split(test, "---")
-	insParts := strings.TrimSpace(parts[0])
+	insParts := strings.TrimSpace(parts[1])
 	insLines := strings.Split(insParts, "\n")
-	tstParts := strings.TrimSpace(parts[1])
+	tstParts := strings.TrimSpace(parts[2])
 	tstLines := strings.Split(tstParts, "\n")
 
 	code := strToCode(t, insLines)

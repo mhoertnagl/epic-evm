@@ -4,9 +4,9 @@ type Op = uint32
 
 const (
 	OpDPR Op = 0x0
-	OpD12    = 0x1
+	OpDI8    = 0x1
 	OpMEM    = 0x2
-	OpM12    = 0x3
+	OpMI8    = 0x3
 	OpI16    = 0x4
 	// OpNA5    = 0x5
 	// OpNA6    = 0x6
@@ -65,7 +65,7 @@ func ra(ins uint32) uint32 {
 }
 
 func rb(ins uint32) uint32 {
-	return bitsAt(ins, 5, 11)
+	return bitsAt(ins, 5, 4)
 }
 
 func sop(ins uint32) SOp {
@@ -73,11 +73,11 @@ func sop(ins uint32) SOp {
 }
 
 func shamt(ins uint32) SOp {
-	return bitsAt(ins, 5, 4)
+	return bitsAt(ins, 5, 11)
 }
 
-func imm12(ins uint32) uint32 {
-	return bitsAt(ins, 12, 4)
+func imm8(ins uint32) uint32 {
+	return bitsAt(ins, 8, 4)
 }
 
 func imm16(ins uint32) uint32 {
