@@ -458,6 +458,83 @@ the value in register RD, then stores the result to register RD again.
 
 
 --------------------------------------------------------------------------------
+ MUL - Signed Multiplication
+--------------------------------------------------------------------------------
+
+Multiplies the values in registers RA and RB, then stores the result in register
+RD. The value in RB may be shifted or rotated beforehand.
+
+      add{cond} rd ra rb {sop shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   0 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT             | SOP   | RB                 | 0   0   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] * shift(REG[RB], SOP, SHAMT)
+
+
+Multiplies the values in register RA and the sign extended 8 bit immediate value
+IMM8, then stores the result in register RD. The immediate value may be rotated
+beforehand.
+
+      add{cond} rd ra u8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 0   0   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] * (sign(IMM8) <<> SHAMT . 0)
+
+
+Multiplies the sign extended 16 bit immediate value IMM16 to the value in
+register RD, then stores the result in register RD again.
+
+      add{cond} rd u16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   0   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] * sign(IMM16)
+
+
+Multiplies the 16 bit immediate value IMM16 shifted to the left by 16 bit to the
+value in register RD , then stores the result to register RD again.
+
+      add{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   0   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] * (IMM16 << 16)
+
+
+--------------------------------------------------------------------------------
  CPS - Compare Signed
 --------------------------------------------------------------------------------
 
@@ -477,8 +554,10 @@ The value in RB may be shifted or rotated beforehand.
 
       if cond_passed(COND)
         rs := REG[RA] - shift(REG[RB], SOP, SHAMT)
-        CSR[L] = rs[31] == 1
+        CSR[L] = rs[31]
         CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
 
 
 --------------------------------------------------------------------------------
@@ -501,8 +580,10 @@ The value in RB may be shifted or rotated beforehand.
 
       if cond_passed(COND)
         rs := REG[RA] - shift(REG[RB], SOP, SHAMT)
-        CSR[L] = rs[32] == 0
+        CSR[L] = ~rs[32]
         CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
 
 
 --------------------------------------------------------------------------------

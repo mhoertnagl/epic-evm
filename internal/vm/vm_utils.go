@@ -67,6 +67,8 @@ func (m *VM) Reg(id string) uint32 {
 	case "r31":
 		return m.regs[31]
 	case "sp":
+		return m.regs[28]
+	case "fp":
 		return m.regs[29]
 	case "rp":
 		return m.regs[30]

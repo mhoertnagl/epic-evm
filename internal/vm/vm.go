@@ -126,15 +126,19 @@ func (m *VM) runBRA(ins uint32) {
 
 func (m *VM) writeRegs(rd uint32, va uint32, vb uint32, aop uint32) {
 	vr, c := alu(aop, va, vb)
+	ov := Bit(vr, 31) == 1
+	cr := c == 1
 
 	switch aop {
 	case OpCPS:
 		m.setEqualFlag(vr == 0)
-		m.setLessFlag(Bit(vr, 31) == 1)
+		m.setLessFlag(ov)
+		m.setVCFlags(cr, ov)
 		m.regs[IP]++
 	case OpCPU:
 		m.setEqualFlag(vr == 0)
-		m.setLessFlag(c == 0)
+		m.setLessFlag(cr == false)
+		m.setVCFlags(cr, ov)
 		m.regs[IP]++
 	default:
 		m.regs[rd] = vr
@@ -228,6 +232,11 @@ func (m *VM) setEqualFlag(eq bool) {
 
 func (m *VM) setLessFlag(lt bool) {
 	m.csr = SetBool(m.csr, 27, lt)
+}
+
+func (m *VM) setVCFlags(cr bool, ov bool) {
+	m.csr = SetBool(m.csr, 28, cr)
+	m.csr = SetBool(m.csr, 29, ov)
 }
 
 func (m *VM) ins(code []byte) uint32 {
