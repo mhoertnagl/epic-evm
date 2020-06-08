@@ -2,7 +2,10 @@ package vm_test
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,11 +15,18 @@ import (
 )
 
 func TestInstrctions(t *testing.T) {
-	tstFile(t, "../../test/add.tst")
-	tstFile(t, "../../test/sub.tst")
-	tstFile(t, "../../test/mul.tst")
-	tstFile(t, "../../test/oor.tst")
-	tstFile(t, "../../test/mov.tst")
+	tstFiles(t, "../../test")
+}
+
+func tstFiles(t *testing.T, dir string) {
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if filepath.Ext(path) == ".tst" {
+			fmt.Printf("Testing [%s] ...\n", path)
+			tstFile(t, path)
+			fmt.Printf("Done.\n")
+		}
+		return nil
+	})
 }
 
 func tstFile(t *testing.T, path string) {

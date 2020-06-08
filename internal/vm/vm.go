@@ -175,9 +175,11 @@ func alu(op uint32, va uint32, vb uint32) (uint32, uint32) {
 	case OpSUB:
 		return bits.Sub32(va, vb, 0)
 	case OpMUL:
-		return bits.Mul32(va, vb)
+		hi, lo := bits.Mul32(va, vb)
+		return lo, hi & 1
 	case OpDIV:
-		return bits.Div32(0, va, vb)
+		quo, _ := bits.Div32(0, va, vb)
+		return quo, 0
 	case OpAND:
 		return va & vb, 0
 	case OpOOR:

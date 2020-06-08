@@ -29,11 +29,13 @@ All registers are 32 bits wide.
 
 The general purpose registers a directly accessible to the programmer and serve
 as storage locations for immediate computations. They are addressed by their
-mnemonics r0 to r15.
+mnemonics r0 to r31.
 Because of their special roles r13, r14 and r15 have alternative names sp, rp
 and ip respectively.
 Register r15 (ip) is the instruction pointer. Writing to this register will
 alter the program execution flow.
+
+// TODO: Outdated.
 
        Bits    | Mn. | Alt. | Role
       ---------+-----+------+-------------------------------------------
@@ -130,7 +132,6 @@ routine that sets the CPU INFO REGISTER with the appropriate version info:
       sts cir r0                   // Save CPU version info to CIR register.
 
 The routine is stored in the CPU bootstrap ROM.
-
 
 
 CPU STATE REGISTER - CSR
@@ -263,6 +264,7 @@ If an instruction should be executed will then be determined by
         | E & INSTR[26]
         | INSTR[28] & INSTR[27] & INSTR[26]
 
+
 ================================================================================
  DATA PROCESSING INSTRUCTIONS
 ================================================================================
@@ -293,8 +295,8 @@ If an instruction should be executed will then be determined by
        0 1 | rol (<<>)                   1 1 | sra (>>>)
 
 
-signed: mul, cps
-unsigned: add, sub, and, oor, xor, nor, cpu, mov, div,
+signed: mul, div, cps
+unsigned: add, sub, and, oor, xor, nor, cpu, mov,
 
 
 Load 32 bit value:
@@ -461,10 +463,11 @@ the value in register RD, then stores the result to register RD again.
  MUL - Signed Multiplication
 --------------------------------------------------------------------------------
 
-Multiplies the values in registers RA and RB, then stores the result in register
-RD. The value in RB may be shifted or rotated beforehand.
+Multiplies the values in registers RA and RB, then stores the the lower 32 bits
+of the product in register RD. The value in RB may be shifted or rotated
+beforehand.
 
-      add{cond} rd ra rb {sop shamt}
+      mul{cond} rd ra rb {sop shamt}
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -479,11 +482,11 @@ RD. The value in RB may be shifted or rotated beforehand.
         REG[RD] = REG[RA] * shift(REG[RB], SOP, SHAMT)
 
 
-Multiplies the values in register RA and the sign extended 8 bit immediate value
-IMM8, then stores the result in register RD. The immediate value may be rotated
-beforehand.
+Multiplies the value in register RA and the sign extended 8 bit immediate value
+IMM8, then stores the lower 32 bits of the product in register RD. The immediate
+value may be rotated beforehand.
 
-      add{cond} rd ra u8 {<<> shamt}
+      mul{cond} rd ra u8 {<<> shamt}
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -499,9 +502,10 @@ beforehand.
 
 
 Multiplies the sign extended 16 bit immediate value IMM16 to the value in
-register RD, then stores the result in register RD again.
+register RD, then stores the the lower 32 bits of the product in register RD
+again.
 
-      add{cond} rd u16
+      mul{cond} rd u16
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -516,10 +520,11 @@ register RD, then stores the result in register RD again.
         REG[RD] = REG[RA] * sign(IMM16)
 
 
-Multiplies the 16 bit immediate value IMM16 shifted to the left by 16 bit to the
-value in register RD , then stores the result to register RD again.
+Multiplies the signed 16 bit immediate value IMM16 shifted to the left by 16 bit
+to the value in register RD, then stores the lower 32 bits of the product in
+register RD again.
 
-      add{cond} rd u16 << 16
+      mul{cond} rd u16 << 16
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -532,6 +537,395 @@ value in register RD , then stores the result to register RD again.
 
       if cond_passed(COND)
         REG[RD] = REG[RA] * (IMM16 << 16)
+
+
+--------------------------------------------------------------------------------
+ DIV - Signed Multiplication
+--------------------------------------------------------------------------------
+
+Divides the value in register RA by the value in register RB, then stores the
+quotient in register RD. The value in RB may be shifted or rotated beforehand.
+
+      div{cond} rd ra rb {sop shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   0 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT             | SOP   | RB                 | 0   0   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] / shift(REG[RB], SOP, SHAMT)
+
+
+Divides the values in register RA by the sign extended 8 bit immediate value
+IMM8, then stores the result in register RD. The immediate value may be rotated
+beforehand.
+
+      div{cond} rd ra u8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 0   0   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] / (sign(IMM8) <<> SHAMT . 0)
+
+
+Divides the value in register RD by the sign extended 16 bit immediate value
+IMM16, then stores the quotient in register RD again.
+
+      div{cond} rd u16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   0   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] / sign(IMM16)
+
+
+Divides the value in register RD by the 16 bit immediate value IMM16 shifted to
+the left by 16 bit, then stores the quotient to register RD again.
+
+      div{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   0   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] / (IMM16 << 16)
+
+
+--------------------------------------------------------------------------------
+ AND - Bitwise Logical AND
+--------------------------------------------------------------------------------
+
+Forms the bitwise AND of the values in registers RA and RB, then stores the
+result in register RD. The value in RB may be shifted or rotated beforehand.
+
+      and{cond} rd ra rb {sop shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   0 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT             | SOP   | RB                 | 0   1   0   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] & shift(REG[RB], SOP, SHAMT)
+
+
+Forms the bitwise AND of the values in register RA and the zero extended 8 bit
+immediate value IMM8, then stores the result in register RD. The immediate value
+may be rotated beforehand.
+
+      and{cond} rd ra u8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 0   1   0   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] & (zero(IMM8) <<> SHAMT . 0)
+
+
+Forms the bitwise AND of the zero extended 16 bit immediate value IMM16 and the
+value in register RD, then stores the result in register RD again.
+
+      add{cond} rd u16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   0   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] & zero(IMM16)
+
+
+Forms the bitwise AND of the 16 bit immediate value IMM16 shifted to the left by
+16 bit and the value in register RD, then stores the result to register RD
+again.
+
+      and{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   0   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] & (IMM16 << 16)
+
+
+--------------------------------------------------------------------------------
+ OOR - Bitwise Logical OR
+--------------------------------------------------------------------------------
+
+Forms the bitwise OR of the values in registers RA and RB, then stores the
+result in register RD. The value in RB may be shifted or rotated beforehand.
+
+      oor{cond} rd ra rb {sop shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   0 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT             | SOP   | RB                 | 0   1   0   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] | shift(REG[RB], SOP, SHAMT)
+
+
+Forms the bitwise OR of the values in register RA and the zero extended 8 bit
+immediate value IMM8, then stores the result in register RD. The immediate value
+may be rotated beforehand.
+
+      oor{cond} rd ra u8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 0   1   0   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] | (zero(IMM8) <<> SHAMT . 0)
+
+
+Forms the bitwise OR of the zero extended 16 bit immediate value IMM16 and the
+value in register RD, then stores the result in register RD again.
+
+      oor{cond} rd u16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   0   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] | zero(IMM16)
+
+
+Forms the bitwise OR of the 16 bit immediate value IMM16 shifted to the left by
+16 bit and the value in register RD, then stores the result to register RD
+again.
+
+      oor{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   0   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] | (IMM16 << 16)
+
+
+--------------------------------------------------------------------------------
+ XOR - Bitwise Logical XOR
+--------------------------------------------------------------------------------
+
+Forms the bitwise XOR of the values in registers RA and RB, then stores the
+result in register RD. The value in RB may be shifted or rotated beforehand.
+
+      xor{cond} rd ra rb {sop shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   0 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT             | SOP   | RB                 | 0   1   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] ^ shift(REG[RB], SOP, SHAMT)
+
+
+Forms the bitwise XOR of the values in register RA and the zero extended 8 bit
+immediate value IMM8, then stores the result in register RD. The immediate value
+may be rotated beforehand.
+
+      xor{cond} rd ra u8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 0   1   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] ^ (zero(IMM8) <<> SHAMT . 0)
+
+
+Forms the bitwise XOR of the zero extended 16 bit immediate value IMM16 and the
+value in register RD, then stores the result in register RD again.
+
+      xor{cond} rd u16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] ^ zero(IMM16)
+
+
+Forms the bitwise XOR of the 16 bit immediate value IMM16 shifted to the left by
+16 bit and the value in register RD, then stores the result to register RD
+again.
+
+      xor{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = REG[RA] ^ (IMM16 << 16)
+
+
+--------------------------------------------------------------------------------
+ NOR - Bitwise Logical NOR
+--------------------------------------------------------------------------------
+
+Forms the bitwise NOR of the values in registers RA and RB, then stores the
+result in register RD. The value in RB may be shifted or rotated beforehand.
+
+      nor{cond} rd ra rb {sop shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   0 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT             | SOP   | RB                 | 0   1   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = ~(REG[RA] | shift(REG[RB], SOP, SHAMT))
+
+
+Forms the bitwise NOR of the values in register RA and the zero extended 8 bit
+immediate value IMM8, then stores the result in register RD. The immediate value
+may be rotated beforehand.
+
+      nor{cond} rd ra u8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 0   1   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = ~(REG[RA] | (zero(IMM8) <<> SHAMT . 0))
+
+
+Forms the bitwise NOR of the zero extended 16 bit immediate value IMM16 and the
+value in register RD, then stores the result in register RD again.
+
+      nor{cond} rd u16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = ~(REG[RA] | zero(IMM16))
+
+
+Forms the bitwise NOR of the 16 bit immediate value IMM16 shifted to the left by
+16 bit and the value in register RD, then stores the result to register RD
+again.
+
+      nor{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 0   1   1   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        REG[RD] = ~(REG[RA] | (IMM16 << 16))
 
 
 --------------------------------------------------------------------------------
@@ -554,6 +948,73 @@ The value in RB may be shifted or rotated beforehand.
 
       if cond_passed(COND)
         rs := REG[RA] - shift(REG[RB], SOP, SHAMT)
+        CSR[L] = rs[31]
+        CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
+
+
+Compares register RA and the zero extended 8 bit immediate value IMM8, then
+updates the condition flags in the CSR. The immediate value may be rotated
+beforehand.
+
+      cps{cond} ra u8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | 0   0    0   0   0 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 1   1   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        rs := REG[RA] - (sign(IMM8) <<> SHAMT . 0)
+        CSR[L] = rs[31]
+        CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
+
+
+Compares the sign extended 16 bit immediate value IMM16 and the value in
+register RD, then updates the condition flags in the CSR.
+
+      cps{cond} rd u16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 1   1   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        rs := REG[RA] - sign(IMM16)
+        CSR[L] = rs[31]
+        CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
+
+
+Compares the 16 bit immediate value IMM16 shifted to the left by 16 bit and the
+value in register RD, then updates the condition flags in the CSR.
+
+      cps{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 1   1   1   0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        rs := REG[RA] - (IMM16 << 16)
         CSR[L] = rs[31]
         CSR[E] = rs[31:0] == 0
         CSR[C] = rs[32]
