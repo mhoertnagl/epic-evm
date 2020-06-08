@@ -19,11 +19,12 @@ func TestInstrctions(t *testing.T) {
 }
 
 func tstFiles(t *testing.T, dir string) {
+	t.Helper()
+
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if filepath.Ext(path) == ".tst" {
-			fmt.Printf("Testing [%s] ...\n", path)
+			fmt.Printf("Testing [%s].\n", path)
 			tstFile(t, path)
-			fmt.Printf("Done.\n")
 		}
 		return nil
 	})
