@@ -329,7 +329,7 @@ The value in RB may be shifted or rotated beforehand.
 
 Adds the values in register RA and the zero extended 8 bit immediate value
 IMM8, then stores the result in register RD. The immediate value may be rotated
-beforehand.
+beforehand by a multiple of 2.
 
       add{cond} rd ra u8 {<<> shamt}
 
@@ -406,7 +406,7 @@ the result in register RD. The value in RB may be shifted or rotated beforehand.
 
 Subtracts the zero extended 8 bit immediate value IMM8 from the value in
 register RA, then stores the result in register RD. The immediate value may be
-rotated beforehand.
+rotated beforehand by a multiple of 2.
 
       sub{cond} rd ra u8 {<<> shamt}
 
@@ -484,9 +484,9 @@ beforehand.
 
 Multiplies the value in register RA and the sign extended 8 bit immediate value
 IMM8, then stores the lower 32 bits of the product in register RD. The immediate
-value may be rotated beforehand.
+value may be rotated beforehand by a multiple of 2.
 
-      mul{cond} rd ra u8 {<<> shamt}
+      mul{cond} rd ra s8 {<<> shamt}
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -505,7 +505,7 @@ Multiplies the sign extended 16 bit immediate value IMM16 to the value in
 register RD, then stores the the lower 32 bits of the product in register RD
 again.
 
-      mul{cond} rd u16
+      mul{cond} rd s16
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -563,9 +563,9 @@ quotient in register RD. The value in RB may be shifted or rotated beforehand.
 
 Divides the values in register RA by the sign extended 8 bit immediate value
 IMM8, then stores the result in register RD. The immediate value may be rotated
-beforehand.
+beforehand by a multiple of 2.
 
-      div{cond} rd ra u8 {<<> shamt}
+      div{cond} rd ra s8 {<<> shamt}
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -583,7 +583,7 @@ beforehand.
 Divides the value in register RD by the sign extended 16 bit immediate value
 IMM16, then stores the quotient in register RD again.
 
-      div{cond} rd u16
+      div{cond} rd s16
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -640,7 +640,7 @@ result in register RD. The value in RB may be shifted or rotated beforehand.
 
 Forms the bitwise AND of the values in register RA and the zero extended 8 bit
 immediate value IMM8, then stores the result in register RD. The immediate value
-may be rotated beforehand.
+may be rotated beforehand by a multiple of 2.
 
       and{cond} rd ra u8 {<<> shamt}
 
@@ -718,7 +718,7 @@ result in register RD. The value in RB may be shifted or rotated beforehand.
 
 Forms the bitwise OR of the values in register RA and the zero extended 8 bit
 immediate value IMM8, then stores the result in register RD. The immediate value
-may be rotated beforehand.
+may be rotated beforehand by a multiple of 2.
 
       oor{cond} rd ra u8 {<<> shamt}
 
@@ -796,7 +796,7 @@ result in register RD. The value in RB may be shifted or rotated beforehand.
 
 Forms the bitwise XOR of the values in register RA and the zero extended 8 bit
 immediate value IMM8, then stores the result in register RD. The immediate value
-may be rotated beforehand.
+may be rotated beforehand by a multiple of 2.
 
       xor{cond} rd ra u8 {<<> shamt}
 
@@ -874,7 +874,7 @@ result in register RD. The value in RB may be shifted or rotated beforehand.
 
 Forms the bitwise NOR of the values in register RA and the zero extended 8 bit
 immediate value IMM8, then stores the result in register RD. The immediate value
-may be rotated beforehand.
+may be rotated beforehand by a multiple of 2.
 
       nor{cond} rd ra u8 {<<> shamt}
 
@@ -954,11 +954,11 @@ The value in RB may be shifted or rotated beforehand.
         CSR[V] = ~rs[32]
 
 
-Compares register RA and the zero extended 8 bit immediate value IMM8, then
+Compares register RA and the sign extended 8 bit immediate value IMM8, then
 updates the condition flags in the CSR. The immediate value may be rotated
-beforehand.
+beforehand by a multiple of 2.
 
-      cps{cond} ra u8 {<<> shamt}
+      cps{cond} ra s8 {<<> shamt}
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -980,7 +980,7 @@ beforehand.
 Compares the sign extended 16 bit immediate value IMM16 and the value in
 register RD, then updates the condition flags in the CSR.
 
-      cps{cond} rd u16
+      cps{cond} rd s16
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -1047,6 +1047,73 @@ The value in RB may be shifted or rotated beforehand.
         CSR[V] = ~rs[32]
 
 
+Compares register RA and the zero extended 8 bit immediate value IMM8, then
+updates the condition flags in the CSR. The immediate value may be rotated
+beforehand by a multiple of 2.
+
+      cpu{cond} ra s8 {<<> shamt}
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   0   1 | COND      | 0   0    0   0   0 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 1   1   0   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        rs := REG[RA] - (zero(IMM8) <<> SHAMT . 0)
+        CSR[L] = ~rs[32]
+        CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
+
+
+Compares the zero extended 16 bit immediate value IMM16 and the value in
+register RD, then updates the condition flags in the CSR.
+
+      cpu{cond} rd s16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 0 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 1   1   0   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        rs := REG[RA] - zero(IMM16)
+        CSR[L] = ~rs[32]
+        CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
+
+
+Compares the 16 bit immediate value IMM16 shifted to the left by 16 bit and the
+value in register RD, then updates the condition flags in the CSR.
+
+      cpu{cond} rd u16 << 16
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 1   0   0 | COND      | RD                 | 1 | IMM16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+                                                       | 1   1   0   1 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        rs := REG[RA] - (IMM16 << 16)
+        CSR[L] = ~rs[32]
+        CSR[E] = rs[31:0] == 0
+        CSR[C] = rs[32]
+        CSR[V] = ~rs[32]
+
+
 --------------------------------------------------------------------------------
  MOV - Move
 --------------------------------------------------------------------------------
@@ -1072,9 +1139,10 @@ Note that bits 16-20 are reserved for future enhancements and are expected to be
 zero to guarantee compatibility with upcoming ISA releases.
 
 
-Moves the sign extended 12 bit immediate value IMM12 into register RD.
+Moves the zero extended 8 bit immediate value IMM8 into register RD. The
+immediate value may be rotated beforehand by a multiple of 2.
 
-      mov{cond} rd s12
+      mov{cond} rd u8 {<<> shamt}
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -1136,6 +1204,10 @@ The lower halfword remains untouched.
  STW - Store Word
 --------------------------------------------------------------------------------
 
+Stores the value of register RD to the memory location of the value register RA
+offset by the value in register RB. The value in RB may be shifted or rotated
+beforehand.
+
       stw{cond} rd ra[rb {sop shamt}]
 
       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
@@ -1152,7 +1224,11 @@ The lower halfword remains untouched.
         MEM[adr] = REG[RD]
 
 
-      stw{cond} rd ra[imm12]
+Stores the value of register RD to the memory location of the value register RA
+offset by the sign extended 8 bit immediate value IMM8. The immediate value may
+be rotated beforehand by a multiple of 2.
+
+      stw{cond} rd ra[s8 {<<> shamt}]
 
        31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
@@ -1164,7 +1240,51 @@ The lower halfword remains untouched.
       +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
 
       if cond_passed(COND)
-        adr := REG[RA] + (zero(IMM8) <<> SHAMT . 0)
+        adr := REG[RA] + (sign(IMM8) <<> SHAMT . 0)
+        MEM[adr] = REG[RD]
+
+
+--------------------------------------------------------------------------------
+ LDW - Load Word
+--------------------------------------------------------------------------------
+
+Loads the value at memory location of the value register RA offset by the value
+in register RB, then stores it in register RD. The value in RB may be shifted or
+rotated beforehand.
+
+      ldw{cond} rd ra[rb {sop shamt}]
+
+      31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   1   0 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT             | SOP   | RB                 | 0   0   0 | 0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        adr := REG[RA] + shift(REG[RB], SOP, SHAMT)
+        MEM[adr] = REG[RD]
+
+
+Loads the value at memory location of the value register RA offset by the sign
+extended 8 bit immediate value IMM8, then stores it in register RD. The
+immediate value may be rotated beforehand by a multiple of 2.
+
+      ldw{cond} rd ra[s8 {<<> shamt}]
+
+       31  30  29  28  27  26  25  24    23  22  21  20  19  18  17  16
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | 0   1   1 | COND      | RD                 | RA                |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+       15  14  13  12  11  10  09  08    07  06  05  04  03  02  01  00
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+      | SHAMT         | IMM8                           | 0   0   0 | 0 |
+      +---+---+---+---+---+---+---+---++---+---+---+---+---+---+---+---+
+
+      if cond_passed(COND)
+        adr := REG[RA] + (sign(IMM8) <<> SHAMT . 0)
         MEM[adr] = REG[RD]
 
 

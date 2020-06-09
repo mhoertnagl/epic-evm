@@ -18,6 +18,11 @@ func TestInstrctions(t *testing.T) {
 	tstFiles(t, "../../test")
 }
 
+// TODO: cond tests
+// TODO: move IP r0 test
+// TODO: memory
+// TODO: branch
+
 func tstFiles(t *testing.T, dir string) {
 	t.Helper()
 
