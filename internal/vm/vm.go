@@ -10,21 +10,32 @@ type VM struct {
 	csr  uint32
 	regs [32]uint32
 	mem  []byte
+	len  uint32
 }
 
 func NewVM(mem []byte) *VM {
-	return &VM{mem: mem}
+	return &VM{
+		mem: mem,
+		len: uint32(len(mem) >> 2),
+	}
+}
+
+func (m *VM) Running() bool {
+	return m.regs[IP] < m.len
 }
 
 func (m *VM) Run() {
-	len := uint32(len(m.mem) >> 2)
-	for m.regs[IP] < len {
-		ins := m.ins(m.mem)
-		if m.condPassed(ins) {
-			m.run(ins)
-		} else {
-			m.regs[IP]++
-		}
+	for m.Running() {
+		m.Step()
+	}
+}
+
+func (m *VM) Step() {
+	ins := m.ins(m.mem)
+	if m.condPassed(ins) {
+		m.run(ins)
+	} else {
+		m.regs[IP]++
 	}
 }
 
