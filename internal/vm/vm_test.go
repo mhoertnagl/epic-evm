@@ -14,6 +14,8 @@ import (
 	"github.com/mhoertnagl/epic-evm/internal/vm"
 )
 
+// TODO: Div is still unsigned.
+
 func TestInstrctions2(t *testing.T) {
 	tstFiles(t, "../../test")
 }
