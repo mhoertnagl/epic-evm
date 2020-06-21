@@ -5,6 +5,21 @@ import (
 	"math/bits"
 )
 
+// cps
+// cpu
+// stw
+// ldw
+// bra
+// brl
+
+// rename to cpu
+
+// console UI
+// a bus
+// video ram
+// interrupts
+// kbd input
+
 type VM struct {
 	cir  uint32
 	csr  uint32
