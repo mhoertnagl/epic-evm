@@ -5,8 +5,6 @@ import (
 	"math/bits"
 )
 
-// cps
-// cpu
 // stw
 // ldw
 // bra
@@ -199,15 +197,11 @@ func alu(op uint32, va uint32, vb uint32) (uint32, uint32) {
 	case OpADD:
 		return bits.Add32(va, vb, 0)
 	case OpSUB:
-		// v, _ := bits.Sub64(uint64(int32(va)), uint64(int32(vb)), 0)
-		// return uint32(v), uint32(v & 0x100000000 >> 32)
 		return bits.Sub32(va, vb, 0)
 	case OpMUL:
-		hi, lo := bits.Mul32(va, vb)
-		return lo, hi & 1
+		return uint32(int32(va) * int32(vb)), 0
 	case OpDIV:
-		quo, _ := bits.Div32(0, va, vb)
-		return quo, 0
+		return uint32(int32(va) / int32(vb)), 0
 	case OpAND:
 		return va & vb, 0
 	case OpOOR:
@@ -217,13 +211,13 @@ func alu(op uint32, va uint32, vb uint32) (uint32, uint32) {
 	case OpNOR:
 		return ^(va | vb), 0
 	case OpCPS:
-		v, _ := bits.Sub64(uint64(int32(va)), uint64(int32(vb)), 0)
-		return uint32(v), uint32(v & 0x100000000 >> 32)
-		// return bits.Sub32(va, vb, 0)
+		// v, _ := bits.Sub64(uint64(int32(va)), uint64(int32(vb)), 0)
+		// return uint32(v), uint32(v & 0x100000000 >> 32)
+		return bits.Sub32(va, vb, 0)
 	case OpCPU:
-		v, _ := bits.Sub64(uint64(va), uint64(vb), 0)
-		return uint32(v), uint32(v & 0x100000000 >> 32)
-		// return bits.Sub32(va, vb, 0)
+		// v, _ := bits.Sub64(uint64(va), uint64(vb), 0)
+		// return uint32(v), uint32(v & 0x100000000 >> 32)
+		return bits.Sub32(va, vb, 0)
 	case OpMOV:
 		return vb, 0
 	}
@@ -257,7 +251,7 @@ func (m *VM) condPassed(ins uint32) bool {
 }
 
 func isSignedAluOp(aop uint32) bool {
-	return aop == OpMUL || aop == OpCPS
+	return aop == OpMUL || aop == OpDIV || aop == OpCPS
 }
 
 func (m *VM) setEqualFlag(eq bool) {
@@ -268,10 +262,10 @@ func (m *VM) setLessFlag(lt bool) {
 	m.csr = SetBool(m.csr, 27, lt)
 }
 
-func (m *VM) setVCFlags(cr bool, ov bool) {
-	m.csr = SetBool(m.csr, 28, cr)
-	m.csr = SetBool(m.csr, 29, ov)
-}
+// func (m *VM) setVCFlags(cr bool, ov bool) {
+// 	m.csr = SetBool(m.csr, 28, cr)
+// 	m.csr = SetBool(m.csr, 29, ov)
+// }
 
 func (m *VM) ins(code []byte) uint32 {
 	// Instructions access is word aligned only.
