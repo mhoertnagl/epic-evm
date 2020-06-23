@@ -17,7 +17,7 @@
  CPU REGISTERS
 ================================================================================
 
-The EPIC processor has a total of 18 registers. Of these 16 are general purpose
+The EPIC processor has a total of 34 registers. Of these 32 are general purpose
 registers, including the instruction pointer.
 // TODO: CPU registers.
 
@@ -71,9 +71,15 @@ In KERNEL MODE the following two operations allow to read and write special CPU
 registers.
 
       sts cir r0
+      sts csr r0
+
+USER MODE code can only read these registers.
+
       lds r0 cir
+      lds r0 csr
 
 
+--------------------------------------------------------------------------------
 CPU INFO REGISTER - CIR
 --------------------------------------------------------------------------------
 
@@ -134,6 +140,7 @@ routine that sets the CPU INFO REGISTER with the appropriate version info:
 The routine is stored in the CPU bootstrap ROM.
 
 
+--------------------------------------------------------------------------------
 CPU STATE REGISTER - CSR
 --------------------------------------------------------------------------------
 
@@ -174,7 +181,7 @@ CPU registers is a switch to KERNEL MODE via a system call instruction (sys).
 Condition Bits
 --------------------------------------------------------------------------------
 
-Every EPIC instruction contains a three bit condition block. Whether an
+Every EPIC instruction contains a four bit condition block. Whether an
 instruction will be executed will be determined by this condition block and the
 corresponding condition block of the CPU STATE REGISTER.
 
@@ -187,10 +194,10 @@ The following table lists the meanings for each bit:
 
        Bit | Meaning
       -----+-----------------------------------------------------------
-        V  | The OVERFLOW bit is set whenever the signed comparison (CPS)
+        V  | The OVERFLOW bit is set whenever signed comparison (CPS)
            | yields REG[RA] < REG[RB].
       -----+-----------------------------------------------------------
-        C  | The CARRY bit is set whenverver the unsigned comparison (CPU)
+        C  | The CARRY bit is set whenever unsigned comparison (CPU)
            | yields REG[RA] < REG[RB].
       -----+-----------------------------------------------------------
         L  | The LESS bit is set whenever the last comparison operation
@@ -232,10 +239,10 @@ The following conditions can be attached to any instruction:
              |          | lacks an explicit mnemonic condition modifier.
 
 The following is an implementation of Euclid's Greatest Common Divisor algorithm
-leveraging some of the instructions:
+leveraging some conditioned instructions:
 
       @Math.gcd
-          cmp   r0  r1
+          cpu   r0  r1
           sublt r1  r0
           subgt r0  r1
           brane @Math.gcd

@@ -74,6 +74,8 @@ func (m *VM) Reg(id string) uint32 {
 		return m.regs[30]
 	case "ip":
 		return m.regs[31]
+	case "csr":
+		return m.csr
 	}
 	panic("undefined register id")
 }

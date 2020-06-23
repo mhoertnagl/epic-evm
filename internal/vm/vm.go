@@ -136,20 +136,20 @@ func (m *VM) runBRA(ins uint32) {
 }
 
 func (m *VM) writeRegs(rd uint32, va uint32, vb uint32, aop uint32) {
-	vr, c := alu(aop, va, vb)
-	ov := Bit(vr, 31) == 1
-	cr := c == 1
-
+	// vr, c := alu(aop, va, vb)
+	vr, _ := alu(aop, va, vb)
 	switch aop {
 	case OpCPS:
 		m.setEqualFlag(vr == 0)
-		m.setLessFlag(ov)
-		m.setVCFlags(cr, ov)
+		m.setLessFlag(int32(va) < int32(vb))
+		// m.setLessFlag(c == 1)
+		// m.setVCFlags(c == 1, Bit(vr, 31) == 1)
 		m.regs[IP]++
 	case OpCPU:
 		m.setEqualFlag(vr == 0)
-		m.setLessFlag(cr == false)
-		m.setVCFlags(cr, ov)
+		m.setLessFlag(va < vb)
+		// m.setLessFlag(c != Bit(vr, 31))
+		// m.setVCFlags(c == 1, Bit(vr, 31) == 1)
 		m.regs[IP]++
 	default:
 		m.regs[rd] = vr
@@ -184,6 +184,8 @@ func alu(op uint32, va uint32, vb uint32) (uint32, uint32) {
 	case OpADD:
 		return bits.Add32(va, vb, 0)
 	case OpSUB:
+		// v, _ := bits.Sub64(uint64(int32(va)), uint64(int32(vb)), 0)
+		// return uint32(v), uint32(v & 0x100000000 >> 32)
 		return bits.Sub32(va, vb, 0)
 	case OpMUL:
 		hi, lo := bits.Mul32(va, vb)
@@ -200,9 +202,13 @@ func alu(op uint32, va uint32, vb uint32) (uint32, uint32) {
 	case OpNOR:
 		return ^(va | vb), 0
 	case OpCPS:
-		return bits.Sub32(va, vb, 0)
+		v, _ := bits.Sub64(uint64(int32(va)), uint64(int32(vb)), 0)
+		return uint32(v), uint32(v & 0x100000000 >> 32)
+		// return bits.Sub32(va, vb, 0)
 	case OpCPU:
-		return bits.Sub32(va, vb, 0)
+		v, _ := bits.Sub64(uint64(va), uint64(vb), 0)
+		return uint32(v), uint32(v & 0x100000000 >> 32)
+		// return bits.Sub32(va, vb, 0)
 	case OpMOV:
 		return vb, 0
 	}
