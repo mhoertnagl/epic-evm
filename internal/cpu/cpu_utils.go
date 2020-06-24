@@ -1,6 +1,6 @@
-package vm
+package cpu
 
-func (m *VM) Reg(id string) uint32 {
+func (m *Cpu) Reg(id string) uint32 {
 	switch id {
 	case "r0":
 		return m.regs[0]

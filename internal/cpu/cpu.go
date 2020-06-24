@@ -1,4 +1,4 @@
-package vm
+package cpu
 
 import (
 	"encoding/binary"
@@ -10,15 +10,13 @@ import (
 // bra
 // brl
 
-// rename to cpu
-
 // console UI
 // a bus
 // video ram
 // interrupts
 // kbd input
 
-type VM struct {
+type Cpu struct {
 	cir  uint32
 	csr  uint32
 	regs [32]uint32
@@ -26,24 +24,24 @@ type VM struct {
 	len  uint32
 }
 
-func NewVM(mem []byte) *VM {
-	return &VM{
+func NewCpu(mem []byte) *Cpu {
+	return &Cpu{
 		mem: mem,
 		len: uint32(len(mem) >> 2),
 	}
 }
 
-func (m *VM) Running() bool {
+func (m *Cpu) Running() bool {
 	return m.regs[IP] < m.len
 }
 
-func (m *VM) Run() {
+func (m *Cpu) Run() {
 	for m.Running() {
 		m.Step()
 	}
 }
 
-func (m *VM) Step() {
+func (m *Cpu) Step() {
 	ins := m.ins(m.mem)
 	if m.condPassed(ins) {
 		m.run(ins)
@@ -52,7 +50,7 @@ func (m *VM) Step() {
 	}
 }
 
-func (m *VM) run(ins uint32) {
+func (m *Cpu) run(ins uint32) {
 	switch op(ins) {
 	case OpDPR:
 		m.runDPR(ins)
@@ -69,7 +67,7 @@ func (m *VM) run(ins uint32) {
 	}
 }
 
-func (m *VM) runDPR(ins uint32) {
+func (m *Cpu) runDPR(ins uint32) {
 	rd := rd(ins)
 	ra := ra(ins)
 	rb := rb(ins)
@@ -84,7 +82,7 @@ func (m *VM) runDPR(ins uint32) {
 	m.writeRegs(rd, va, vb, aop)
 }
 
-func (m *VM) runDI8(ins uint32) {
+func (m *Cpu) runDI8(ins uint32) {
 	rd := rd(ins)
 	ra := ra(ins)
 	aop := aluop(ins)
@@ -102,7 +100,7 @@ func (m *VM) runDI8(ins uint32) {
 	m.writeRegs(rd, va, vb, aop)
 }
 
-func (m *VM) runMEM(ins uint32) {
+func (m *Cpu) runMEM(ins uint32) {
 	rb := rb(ins)
 	sop := sop(ins)
 	shamt := shamt(ins)
@@ -113,14 +111,14 @@ func (m *VM) runMEM(ins uint32) {
 	m.accessMem(ins, vb)
 }
 
-func (m *VM) runMI8(ins uint32) {
+func (m *Cpu) runMI8(ins uint32) {
 	shamt := shamt(ins)
 	vb := Sext(imm8(ins), 8)
 	vb = shift(vb, OpROL, shamt&0x1E)
 	m.accessMem(ins, vb)
 }
 
-func (m *VM) runD16(ins uint32) {
+func (m *Cpu) runD16(ins uint32) {
 	rd := rd(ins)
 	aop := aluop(ins)
 
@@ -138,7 +136,7 @@ func (m *VM) runD16(ins uint32) {
 	m.writeRegs(rd, va, vb, aop)
 }
 
-func (m *VM) runBRA(ins uint32) {
+func (m *Cpu) runBRA(ins uint32) {
 	if isLink(ins) {
 		m.regs[RP] = m.regs[IP] + 1
 	}
@@ -148,7 +146,7 @@ func (m *VM) runBRA(ins uint32) {
 	m.regs[IP] = ip
 }
 
-func (m *VM) writeRegs(rd uint32, va uint32, vb uint32, aop uint32) {
+func (m *Cpu) writeRegs(rd uint32, va uint32, vb uint32, aop uint32) {
 	// vr, c := alu(aop, va, vb)
 	vr, _ := alu(aop, va, vb)
 	switch aop {
@@ -172,7 +170,7 @@ func (m *VM) writeRegs(rd uint32, va uint32, vb uint32, aop uint32) {
 	}
 }
 
-func (m *VM) accessMem(ins uint32, vb uint32) {
+func (m *Cpu) accessMem(ins uint32, vb uint32) {
 	rd := rd(ins)
 	ra := ra(ins)
 
@@ -238,7 +236,7 @@ func shift(vb uint32, op SOp, shamt uint32) uint32 {
 	panic("unsupported shift operation")
 }
 
-func (m *VM) condPassed(ins uint32) bool {
+func (m *Cpu) condPassed(ins uint32) bool {
 	csrE := Bit(m.csr, 26)
 	csrL := Bit(m.csr, 27)
 	csrG := ^csrL & ^csrE
@@ -254,20 +252,20 @@ func isSignedAluOp(aop uint32) bool {
 	return aop == OpMUL || aop == OpDIV || aop == OpCPS
 }
 
-func (m *VM) setEqualFlag(eq bool) {
+func (m *Cpu) setEqualFlag(eq bool) {
 	m.csr = SetBool(m.csr, 26, eq)
 }
 
-func (m *VM) setLessFlag(lt bool) {
+func (m *Cpu) setLessFlag(lt bool) {
 	m.csr = SetBool(m.csr, 27, lt)
 }
 
-// func (m *VM) setVCFlags(cr bool, ov bool) {
+// func (m *Cpu) setVCFlags(cr bool, ov bool) {
 // 	m.csr = SetBool(m.csr, 28, cr)
 // 	m.csr = SetBool(m.csr, 29, ov)
 // }
 
-func (m *VM) ins(code []byte) uint32 {
+func (m *Cpu) ins(code []byte) uint32 {
 	// Instructions access is word aligned only.
 	return read32(code, m.regs[IP])
 }

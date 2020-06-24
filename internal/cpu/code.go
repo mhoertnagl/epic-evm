@@ -1,4 +1,4 @@
-package vm
+package cpu
 
 type Op = uint32
 

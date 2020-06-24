@@ -1,4 +1,4 @@
-package vm_test
+package cpu_test
 
 import (
 	"encoding/binary"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mhoertnagl/epic-evm/internal/vm"
+	"github.com/mhoertnagl/epic-evm/internal/cpu"
 )
 
 func TestInstrctions2(t *testing.T) {
@@ -88,7 +88,7 @@ func tstFileTest(t *testing.T, path string, i int, test string) {
 	}
 
 	code := strToCode(t, bin)
-	m := vm.NewVM(code)
+	m := cpu.NewCpu(code)
 
 	for m.Running() {
 		ip := m.Reg("ip")
@@ -97,7 +97,7 @@ func tstFileTest(t *testing.T, path string, i int, test string) {
 	}
 }
 
-func tstRegTest(t *testing.T, path string, i int, m *vm.VM, tst string, ip uint32) {
+func tstRegTest(t *testing.T, path string, i int, m *cpu.Cpu, tst string, ip uint32) {
 	if tst != "" {
 		parts := strings.Split(tst, "=")
 
